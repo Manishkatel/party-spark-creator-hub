@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "@supabase/supabase-js";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -15,98 +13,57 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"regular" | "club">("regular");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        window.location.href = "/";
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === 'SIGNED_IN' && session?.user) {
-        window.location.href = "/";
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signUp({
+    // Simulate signup process
+    setTimeout(() => {
+      // Store user data in localStorage for demo
+      const userData = {
         email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName,
-            role: role
-          }
-        }
-      });
-
-      if (error) throw error;
+        fullName,
+        role,
+        id: Math.random().toString(36).substr(2, 9)
+      };
+      localStorage.setItem('currentUser', JSON.stringify(userData));
       
       toast({
         title: "Success!",
-        description: "Check your email to confirm your account.",
+        description: "Account created successfully!",
       });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
+      
       setLoading(false);
-    }
+      window.location.href = "/";
+    }, 1500);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
+    // Simulate signin process
+    setTimeout(() => {
+      // Mock user data
+      const userData = {
         email,
-        password,
-      });
-
-      if (error) throw error;
+        fullName: "Demo User",
+        role: "club" as const,
+        id: Math.random().toString(36).substr(2, 9)
+      };
+      localStorage.setItem('currentUser', JSON.stringify(userData));
       
-      window.location.href = "/";
-    } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+        title: "Success!",
+        description: "Signed in successfully!",
       });
-    } finally {
+      
       setLoading(false);
-    }
+      window.location.href = "/";
+    }, 1000);
   };
-
-  if (user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Already Logged In</CardTitle>
-            <CardDescription>Redirecting you to the homepage...</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

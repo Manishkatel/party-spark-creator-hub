@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Calendar, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "@supabase/supabase-js";
 
 interface Club {
   id: string;
@@ -19,46 +17,62 @@ interface Club {
   created_at: string;
 }
 
+// Mock clubs data
+const mockClubs: Club[] = [
+  {
+    id: "1",
+    name: "Tech Innovators Club",
+    description: "A community of technology enthusiasts and innovators working on cutting-edge projects and sharing knowledge about the latest tech trends.",
+    logo_url: "",
+    contact_email: "contact@techinnovators.com",
+    contact_phone: "+1 (555) 123-4567",
+    website: "https://techinnovators.com",
+    owner_id: "user1",
+    created_at: "2024-01-15T10:00:00Z"
+  },
+  {
+    id: "2",
+    name: "Creative Arts Society",
+    description: "Bringing together artists, designers, and creative minds to collaborate on artistic projects and showcase local talent.",
+    logo_url: "",
+    contact_email: "hello@creativeartsoc.org",
+    contact_phone: "+1 (555) 987-6543",
+    website: "https://creativeartsoc.org",
+    owner_id: "user2",
+    created_at: "2024-02-10T14:30:00Z"
+  },
+  {
+    id: "3",
+    name: "Adventure Seekers",
+    description: "For those who love outdoor activities, hiking, camping, and exploring nature. Join us for exciting adventures and outdoor events.",
+    logo_url: "",
+    contact_email: "adventures@seekers.com",
+    contact_phone: "+1 (555) 456-7890",
+    website: "https://adventureseekers.com",
+    owner_id: "user3",
+    created_at: "2024-03-05T09:15:00Z"
+  }
+];
+
 const Clubs = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    fetchClubs();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchClubs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("clubs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setClubs(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to load clubs",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    // Get user from localStorage
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      setUser(JSON.parse(userData));
     }
-  };
+
+    // Simulate loading clubs
+    setTimeout(() => {
+      setClubs(mockClubs);
+      setLoading(false);
+    }, 1000);
+  }, []);
 
   if (loading) {
     return (
@@ -145,7 +159,12 @@ const Clubs = () => {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => window.location.href = `/club/${club.id}/events`}
+                        onClick={() => {
+                          toast({
+                            title: "Coming Soon",
+                            description: "Club events page will be available soon!",
+                          });
+                        }}
                       >
                         <Calendar className="w-4 h-4 mr-2" />
                         Events

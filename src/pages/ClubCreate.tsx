@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "@supabase/supabase-js";
 
 const ClubCreate = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -24,37 +21,13 @@ const ClubCreate = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        window.location.href = "/auth";
-      } else {
-        checkUserRole(session.user.id);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        window.location.href = "/auth";
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", userId)
-        .single();
-
-      if (error) throw error;
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
       
-      setUserRole(data.role);
-      if (data.role !== 'club') {
+      // Check if user has club role
+      if (parsedUser.role !== 'club') {
         toast({
           title: "Access Denied",
           description: "Only club accounts can create clubs.",
@@ -62,53 +35,46 @@ const ClubCreate = () => {
         });
         window.location.href = "/";
       }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to verify user role",
-        variant: "destructive",
-      });
-      window.location.href = "/";
+    } else {
+      window.location.href = "/auth";
     }
-  };
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setLoading(true);
-    try {
-      const { error } = await supabase
-        .from("clubs")
-        .insert({
-          ...formData,
-          owner_id: user.id
-        });
+    
+    // Simulate club creation
+    setTimeout(() => {
+      const newClub = {
+        id: Math.random().toString(36).substr(2, 9),
+        ...formData,
+        owner_id: user.id,
+        created_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
+      // Store club in localStorage (in real app, this would go to database)
+      const existingClubs = JSON.parse(localStorage.getItem('clubs') || '[]');
+      existingClubs.push(newClub);
+      localStorage.setItem('clubs', JSON.stringify(existingClubs));
 
       toast({
         title: "Success!",
         description: "Club created successfully",
       });
       
-      window.location.href = "/clubs";
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
       setLoading(false);
-    }
+      window.location.href = "/clubs";
+    }, 1500);
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (!user || userRole !== 'club') {
+  if (!user || user.role !== 'club') {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto pt-8">

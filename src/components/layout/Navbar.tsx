@@ -2,31 +2,29 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Users, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    // Check for user in localStorage
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
   }, []);
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      localStorage.removeItem('currentUser');
       setUser(null);
+      toast({
+        title: "Success",
+        description: "Signed out successfully",
+      });
       window.location.href = "/";
     } catch (error: any) {
       toast({
