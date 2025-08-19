@@ -53,12 +53,11 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				party: {
-					purple: '#9b87f5',
-					pink: '#f48fb1',
-					'light-purple': '#e5deff',
-					'light-pink': '#ffdee2',
-					'dark-purple': '#6e59a5'
+				usm: {
+					gold: 'hsl(var(--usm-gold))',
+					'gold-light': 'hsl(var(--usm-gold-light))',
+					'gold-dark': 'hsl(var(--usm-gold-dark))',
+					black: 'hsl(var(--usm-black))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
@@ -117,7 +116,7 @@ export default {
 				'pulse-soft': 'pulse-soft 3s ease-in-out infinite'
 			},
 			backgroundImage: {
-				'gradient-party': 'linear-gradient(to right, #9b87f5, #f48fb1)',
+				'gradient-usm': 'linear-gradient(135deg, hsl(var(--usm-gold)), hsl(var(--usm-gold-dark)))',
 			},
 		}
 	},
