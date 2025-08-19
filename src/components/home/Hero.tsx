@@ -51,7 +51,7 @@ const Hero = () => {
           </div>
 
           <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
-            <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-3 sm:gap-5">
+            <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
               <Link to="/events">
                 <Button size="lg" className="w-full">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -62,11 +62,6 @@ const Hero = () => {
                 <Button variant="outline" size="lg" className="w-full">
                   <Users className="w-4 h-4 mr-2" />
                   View Clubs
-                </Button>
-              </Link>
-              <Link to="/create">
-                <Button variant="secondary" size="lg" className="w-full">
-                  Create Event
                 </Button>
               </Link>
             </div>
