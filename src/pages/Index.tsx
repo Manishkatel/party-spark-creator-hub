@@ -1,15 +1,15 @@
 
 import Layout from "@/components/layout/Layout";
 import Hero from "@/components/home/Hero";
-import Features from "@/components/home/Features";
-import CallToAction from "@/components/home/CallToAction";
+import EventsSection from "@/components/home/EventsSection";
+import ClubsSection from "@/components/home/ClubsSection";
 
 const Index = () => {
   return (
     <Layout>
       <Hero />
-      <Features />
-      <CallToAction />
+      <EventsSection />
+      <ClubsSection />
     </Layout>
   );
 };

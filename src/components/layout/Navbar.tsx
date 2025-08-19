@@ -51,6 +51,9 @@ const Navbar = () => {
               <Link to="/" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                 Home
               </Link>
+              <Link to="/events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                Events
+              </Link>
               <Link to="/clubs" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium flex items-center">
                 <Users className="w-4 h-4 mr-1" />
                 Clubs
@@ -100,6 +103,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Home
+            </Link>
+            <Link 
+              to="/events" 
+              className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Events
             </Link>
             <Link 
               to="/clubs" 
