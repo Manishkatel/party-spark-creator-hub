@@ -1,8 +1,10 @@
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Filter } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 // Mock events data
 const mockEvents = [
@@ -53,6 +55,10 @@ const mockEvents = [
 ];
 
 const EventsSection = () => {
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [priceFilter, setPriceFilter] = useState<string>("All");
+  const [sortBy, setSortBy] = useState<string>("Date");
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -74,6 +80,26 @@ const EventsSection = () => {
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const filteredAndSortedEvents = mockEvents
+    .filter(event => {
+      if (categoryFilter !== "All" && event.category !== categoryFilter) return false;
+      if (priceFilter === "Free" && event.price > 0) return false;
+      if (priceFilter === "Paid" && event.price === 0) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "Date":
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case "Attendees":
+          return b.attendees - a.attendees;
+        case "Price":
+          return a.price - b.price;
+        default:
+          return 0;
+      }
+    });
+
   return (
     <section className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -84,8 +110,51 @@ const EventsSection = () => {
           </p>
         </div>
 
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-8 justify-center">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+          
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Categories</SelectItem>
+              <SelectItem value="Career">Career</SelectItem>
+              <SelectItem value="Entertainment">Entertainment</SelectItem>
+              <SelectItem value="Academic">Academic</SelectItem>
+              <SelectItem value="Workshop">Workshop</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={priceFilter} onValueChange={setPriceFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Price" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Prices</SelectItem>
+              <SelectItem value="Free">Free</SelectItem>
+              <SelectItem value="Paid">Paid</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Date">Sort by Date</SelectItem>
+              <SelectItem value="Attendees">Sort by Attendees</SelectItem>
+              <SelectItem value="Price">Sort by Price</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {mockEvents.map((event) => (
+          {filteredAndSortedEvents.map((event) => (
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
