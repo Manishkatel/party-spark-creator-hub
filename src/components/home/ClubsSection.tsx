@@ -67,7 +67,7 @@ const ClubsSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {featuredClubs.map((club) => (
-            <Card key={club.id} className="hover:shadow-lg transition-shadow">
+            <Card key={club.id} className="hover:shadow-lg transition-shadow flex flex-col h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -82,8 +82,8 @@ const ClubsSection = () => {
                   {club.members} members
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4 text-sm line-clamp-3">
+              <CardContent className="flex flex-col flex-grow">
+                <p className="text-muted-foreground mb-4 text-sm line-clamp-3 flex-grow">
                   {club.description}
                 </p>
                 
@@ -97,7 +97,7 @@ const ClubsSection = () => {
                   </span>
                 </div>
 
-                <Link to={`/club/${club.id}`}>
+                <Link to={`/club/${club.id}`} className="mt-auto">
                   <Button variant="outline" size="sm" className="w-full">
                     View Club
                     <ArrowRight className="w-4 h-4 ml-2" />
