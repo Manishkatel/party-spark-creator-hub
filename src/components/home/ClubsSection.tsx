@@ -97,10 +97,12 @@ const ClubsSection = () => {
                   </span>
                 </div>
 
-                <Button variant="outline" size="sm" className="w-full">
-                  View Club
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                <Link to={`/club/${club.id}`}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    View Club
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}

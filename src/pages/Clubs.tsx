@@ -159,15 +159,10 @@ const Clubs = () => {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: "Coming Soon",
-                            description: "Club events page will be available soon!",
-                          });
-                        }}
+                        onClick={() => window.location.href = `/club/${club.id}`}
                       >
                         <Calendar className="w-4 h-4 mr-2" />
-                        Events
+                        View Club
                       </Button>
                     </div>
                   </div>
