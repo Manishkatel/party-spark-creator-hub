@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Users, LogOut } from "lucide-react";
+import { Menu, Users, LogOut, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -73,15 +75,41 @@ const Navbar = () => {
               {user ? (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-muted-foreground">{user.email}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="p-2"
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="w-4 h-4" />
+                    ) : (
+                      <Moon className="w-4 h-4" />
+                    )}
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={handleSignOut}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </Button>
                 </div>
               ) : (
-                <Button variant="default" asChild>
-                  <Link to="/auth">Sign In</Link>
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="p-2"
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="w-4 h-4" />
+                    ) : (
+                      <Moon className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <Button variant="default" asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -139,8 +167,20 @@ const Navbar = () => {
                 >
                   My Events
                 </Link>
-                <div className="px-3 py-2 text-sm text-muted-foreground border-t">
-                  {user.email}
+                <div className="px-3 py-2 text-sm text-muted-foreground border-t flex items-center justify-between">
+                  <span>{user.email}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="p-1"
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="w-4 h-4" />
+                    ) : (
+                      <Moon className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
                 <button
                   onClick={handleSignOut}
@@ -152,7 +192,24 @@ const Navbar = () => {
               </>
             )}
             {!user && (
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="w-full justify-start"
+                >
+                  {theme === "dark" ? (
+                    <>
+                      <Sun className="w-4 h-4 mr-2" />
+                      Light Mode
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4 mr-2" />
+                      Dark Mode
+                    </>
+                  )}
+                </Button>
                 <Button variant="default" className="w-full" asChild>
                   <Link to="/auth">Sign In</Link>
                 </Button>
