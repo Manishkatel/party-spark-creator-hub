@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Calendar, Globe } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Users, Calendar, Globe, Filter, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Club {
@@ -15,6 +17,10 @@ interface Club {
   website: string;
   owner_id: string;
   created_at: string;
+  category: string;
+  members: number;
+  rating: number;
+  upcomingEvents: number;
 }
 
 // Mock clubs data
@@ -28,7 +34,11 @@ const mockClubs: Club[] = [
     contact_phone: "+1 (555) 123-4567",
     website: "https://techinnovators.com",
     owner_id: "user1",
-    created_at: "2024-01-15T10:00:00Z"
+    created_at: "2024-01-15T10:00:00Z",
+    category: "Technology",
+    members: 284,
+    rating: 4.8,
+    upcomingEvents: 3
   },
   {
     id: "2",
@@ -39,7 +49,11 @@ const mockClubs: Club[] = [
     contact_phone: "+1 (555) 987-6543",
     website: "https://creativeartsoc.org",
     owner_id: "user2",
-    created_at: "2024-02-10T14:30:00Z"
+    created_at: "2024-02-10T14:30:00Z",
+    category: "Arts",
+    members: 156,
+    rating: 4.6,
+    upcomingEvents: 2
   },
   {
     id: "3",
@@ -50,7 +64,26 @@ const mockClubs: Club[] = [
     contact_phone: "+1 (555) 456-7890",
     website: "https://adventureseekers.com",
     owner_id: "user3",
-    created_at: "2024-03-05T09:15:00Z"
+    created_at: "2024-03-05T09:15:00Z",
+    category: "Outdoor",
+    members: 203,
+    rating: 4.7,
+    upcomingEvents: 1
+  },
+  {
+    id: "4",
+    name: "Academic Excellence Club",
+    description: "Dedicated to promoting academic achievement and providing study groups, tutoring, and academic support to all students.",
+    logo_url: "",
+    contact_email: "info@academicexcellence.edu",
+    contact_phone: "+1 (555) 234-5678",
+    website: "https://academicexcellence.edu",
+    owner_id: "user4",
+    created_at: "2024-01-20T11:00:00Z",
+    category: "Academic",
+    members: 89,
+    rating: 4.9,
+    upcomingEvents: 4
   }
 ];
 
@@ -58,6 +91,9 @@ const Clubs = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [ratingFilter, setRatingFilter] = useState<string>("All");
+  const [sortBy, setSortBy] = useState<string>("Rating");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -73,6 +109,36 @@ const Clubs = () => {
       setLoading(false);
     }, 1000);
   }, []);
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      'Technology': 'bg-blue-100 text-blue-800',
+      'Arts': 'bg-purple-100 text-purple-800', 
+      'Academic': 'bg-green-100 text-green-800',
+      'Outdoor': 'bg-orange-100 text-orange-800',
+    };
+    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const filteredAndSortedClubs = clubs
+    .filter(club => {
+      if (categoryFilter !== "All" && club.category !== categoryFilter) return false;
+      if (ratingFilter === "4.5+" && club.rating < 4.5) return false;
+      if (ratingFilter === "4.0+" && club.rating < 4.0) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "Rating":
+          return b.rating - a.rating;
+        case "Members":
+          return b.members - a.members;
+        case "Events":
+          return b.upcomingEvents - a.upcomingEvents;
+        default:
+          return 0;
+      }
+    });
 
   if (loading) {
     return (
@@ -102,7 +168,50 @@ const Clubs = () => {
           )}
         </div>
 
-        {clubs.length === 0 ? (
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 mb-8">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+          
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Categories</SelectItem>
+              <SelectItem value="Technology">Technology</SelectItem>
+              <SelectItem value="Arts">Arts</SelectItem>
+              <SelectItem value="Academic">Academic</SelectItem>
+              <SelectItem value="Outdoor">Outdoor</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={ratingFilter} onValueChange={setRatingFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Rating" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Ratings</SelectItem>
+              <SelectItem value="4.5+">4.5+ Stars</SelectItem>
+              <SelectItem value="4.0+">4.0+ Stars</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Rating">Sort by Rating</SelectItem>
+              <SelectItem value="Members">Sort by Members</SelectItem>
+              <SelectItem value="Events">Sort by Events</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filteredAndSortedClubs.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -120,7 +229,7 @@ const Clubs = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clubs.map((club) => (
+            {filteredAndSortedClubs.map((club) => (
               <Card key={club.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-center space-x-3">
@@ -135,10 +244,15 @@ const Clubs = () => {
                         <Users className="w-6 h-6 text-primary" />
                       </div>
                     )}
-                    <div>
-                      <CardTitle className="text-lg">{club.name}</CardTitle>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{club.name}</CardTitle>
+                        <Badge className={getCategoryColor(club.category)} variant="secondary">
+                          {club.category}
+                        </Badge>
+                      </div>
                       <CardDescription className="text-sm">
-                        Since {new Date(club.created_at).getFullYear()}
+                        {club.members} members • Since {new Date(club.created_at).getFullYear()}
                       </CardDescription>
                     </div>
                   </div>
@@ -147,6 +261,17 @@ const Clubs = () => {
                   <p className="text-muted-foreground mb-4 line-clamp-3">
                     {club.description || "No description available"}
                   </p>
+                  
+                  <div className="flex items-center justify-between mb-4 text-sm">
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                      <span className="font-medium">{club.rating}</span>
+                    </div>
+                    <span className="text-muted-foreground">
+                      {club.upcomingEvents} upcoming events
+                    </span>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
                       {club.website && (

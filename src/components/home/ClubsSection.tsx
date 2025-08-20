@@ -1,10 +1,8 @@
-import { Users, ArrowRight, Star, Filter } from "lucide-react";
+import { Users, ArrowRight, Star } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 
 // Mock featured clubs data
 const featuredClubs = [
@@ -47,10 +45,6 @@ const featuredClubs = [
 ];
 
 const ClubsSection = () => {
-  const [categoryFilter, setCategoryFilter] = useState<string>("All");
-  const [ratingFilter, setRatingFilter] = useState<string>("All");
-  const [sortBy, setSortBy] = useState<string>("Rating");
-
   const getCategoryColor = (category: string) => {
     const colors = {
       'Technology': 'bg-blue-100 text-blue-800',
@@ -60,26 +54,6 @@ const ClubsSection = () => {
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
-
-  const filteredAndSortedClubs = featuredClubs
-    .filter(club => {
-      if (categoryFilter !== "All" && club.category !== categoryFilter) return false;
-      if (ratingFilter === "4.5+" && club.rating < 4.5) return false;
-      if (ratingFilter === "4.0+" && club.rating < 4.0) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "Rating":
-          return b.rating - a.rating;
-        case "Members":
-          return b.members - a.members;
-        case "Events":
-          return b.upcomingEvents - a.upcomingEvents;
-        default:
-          return 0;
-      }
-    });
 
   return (
     <section className="py-16 bg-muted/30">
@@ -91,51 +65,8 @@ const ClubsSection = () => {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-8 justify-center">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4" />
-            <span className="text-sm font-medium">Filters:</span>
-          </div>
-          
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Categories</SelectItem>
-              <SelectItem value="Technology">Technology</SelectItem>
-              <SelectItem value="Arts">Arts</SelectItem>
-              <SelectItem value="Academic">Academic</SelectItem>
-              <SelectItem value="Outdoor">Outdoor</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={ratingFilter} onValueChange={setRatingFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Rating" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Ratings</SelectItem>
-              <SelectItem value="4.5+">4.5+ Stars</SelectItem>
-              <SelectItem value="4.0+">4.0+ Stars</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Rating">Sort by Rating</SelectItem>
-              <SelectItem value="Members">Sort by Members</SelectItem>
-              <SelectItem value="Events">Sort by Events</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {filteredAndSortedClubs.map((club) => (
+          {featuredClubs.map((club) => (
             <Card key={club.id} className="hover:shadow-lg transition-shadow flex flex-col h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
