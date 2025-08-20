@@ -1,18 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Calendar, Users } from "lucide-react";
+import { Calendar, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import SearchAndFilter from "./SearchAndFilter";
 
 const Hero = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Redirect to events page with search query
-    window.location.href = `/events?search=${encodeURIComponent(searchQuery)}`;
-  };
-
   return (
     <div className="relative overflow-hidden">
       {/* Background decoration */}
@@ -30,24 +21,9 @@ const Hero = () => {
               Never miss out on what's happening at USM.
             </p>
           
-          {/* Search Bar */}
-          <div className="mt-10 max-w-2xl mx-auto">
-            <form onSubmit={handleSearch} className="relative">
-              <Input
-                type="text"
-                placeholder="Search events, clubs, activities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 py-4 text-lg rounded-full border-2 border-border focus:border-primary"
-              />
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-              <Button 
-                type="submit" 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-6"
-              >
-                Search
-              </Button>
-            </form>
+          {/* Enhanced Search and Filter */}
+          <div className="mt-10">
+            <SearchAndFilter />
           </div>
 
           <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">

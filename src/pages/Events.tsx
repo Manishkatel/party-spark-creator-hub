@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Users, Search, Filter } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Event {
@@ -92,35 +90,16 @@ const allMockEvents: Event[] = [
 
 const Events = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get search query from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchParam = urlParams.get('search');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-
     // Simulate loading
     setTimeout(() => {
       setEvents(allMockEvents);
       setLoading(false);
     }, 1000);
   }, []);
-
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.club.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = categoryFilter === "all" || event.category.toLowerCase() === categoryFilter.toLowerCase();
-    
-    return matchesSearch && matchesCategory;
-  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -163,106 +142,67 @@ const Events = () => {
           <p className="text-muted-foreground mb-6">
             Discover and join exciting events happening on campus
           </p>
-          
-          {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search events, clubs, or topics..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="career">Career</SelectItem>
-                <SelectItem value="entertainment">Entertainment</SelectItem>
-                <SelectItem value="academic">Academic</SelectItem>
-                <SelectItem value="workshop">Workshop</SelectItem>
-                <SelectItem value="sports">Sports</SelectItem>
-                <SelectItem value="arts">Arts</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
-
-        {filteredEvents.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Events Found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search criteria or check back later for new events.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((event) => (
-              <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <Badge className={getCategoryColor(event.category)} variant="secondary">
-                      {event.category}
+        
+        {/* Events List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <Card key={event.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start mb-2">
+                  <Badge className={getCategoryColor(event.category)} variant="secondary">
+                    {event.category}
+                  </Badge>
+                  {event.price === 0 ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      FREE
                     </Badge>
-                    {event.price === 0 ? (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        FREE
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">${event.price}</Badge>
-                    )}
+                  ) : (
+                    <Badge variant="outline">${event.price}</Badge>
+                  )}
+                </div>
+                <CardTitle className="text-lg">{event.title}</CardTitle>
+                <CardDescription className="text-sm">
+                  by {event.club}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4 text-sm line-clamp-3">
+                  {event.description}
+                </p>
+                
+                <div className="space-y-2 text-sm mb-4">
+                  <div className="flex items-center text-muted-foreground">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {formatDate(event.date)}
                   </div>
-                  <CardTitle className="text-lg">{event.title}</CardTitle>
-                  <CardDescription className="text-sm">
-                    by {event.club}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4 text-sm line-clamp-3">
-                    {event.description}
-                  </p>
-                  
-                  <div className="space-y-2 text-sm mb-4">
-                    <div className="flex items-center text-muted-foreground">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {formatDate(event.date)}
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {event.location}
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <Users className="w-4 h-4 mr-2" />
-                      {event.attendees} interested
-                    </div>
+                  <div className="flex items-center text-muted-foreground">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {event.location}
                   </div>
+                  <div className="flex items-center text-muted-foreground">
+                    <Users className="w-4 h-4 mr-2" />
+                    {event.attendees} interested
+                  </div>
+                </div>
 
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      Details
-                    </Button>
-                    <Button size="sm" className="flex-1" onClick={() => {
-                      toast({
-                        title: "Interest Registered!",
-                        description: `You're now interested in "${event.title}"`,
-                      });
-                    }}>
-                      Join Event
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1">
+                    Details
+                  </Button>
+                  <Button size="sm" className="flex-1" onClick={() => {
+                    toast({
+                      title: "Interest Registered!",
+                      description: `You're now interested in "${event.title}"`,
+                    });
+                  }}>
+                    Join Event
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </Layout>
   );
