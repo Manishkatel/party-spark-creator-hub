@@ -1,4 +1,4 @@
-import { Users, ArrowRight, Star } from "lucide-react";
+import { Users, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ const featuredClubs = [
     description: "Building the future through code. Weekly hackathons, tech talks, and career prep.",
     members: 284,
     category: "Technology",
-    rating: 4.8,
     upcomingEvents: 3
   },
   {
@@ -21,7 +20,6 @@ const featuredClubs = [
     description: "Capture moments that matter. Photo walks, workshops, and exhibitions.",
     members: 156,
     category: "Arts",
-    rating: 4.6,
     upcomingEvents: 2
   },
   {
@@ -30,7 +28,6 @@ const featuredClubs = [
     description: "Sharpen your argumentation skills. Compete in tournaments and improve public speaking.",
     members: 89,
     category: "Academic",
-    rating: 4.9,
     upcomingEvents: 4
   },
   {
@@ -39,7 +36,6 @@ const featuredClubs = [
     description: "Explore the great outdoors. Weekend trips, nature photography, and outdoor adventures.",
     members: 203,
     category: "Outdoor",
-    rating: 4.7,
     upcomingEvents: 1
   }
 ];
@@ -87,11 +83,7 @@ const ClubsSection = () => {
                   {club.description}
                 </p>
                 
-                <div className="flex items-center justify-between mb-4 text-sm">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                    <span className="font-medium">{club.rating}</span>
-                  </div>
+                <div className="flex items-center justify-center mb-4 text-sm">
                   <span className="text-muted-foreground">
                     {club.upcomingEvents} upcoming events
                   </span>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Calendar, Globe, Filter, Star } from "lucide-react";
+import { Plus, Users, Calendar, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Club {
@@ -19,7 +19,7 @@ interface Club {
   created_at: string;
   category: string;
   members: number;
-  rating: number;
+  
   upcomingEvents: number;
 }
 
@@ -37,7 +37,7 @@ const mockClubs: Club[] = [
     created_at: "2024-01-15T10:00:00Z",
     category: "Technology",
     members: 284,
-    rating: 4.8,
+    
     upcomingEvents: 3
   },
   {
@@ -52,7 +52,7 @@ const mockClubs: Club[] = [
     created_at: "2024-02-10T14:30:00Z",
     category: "Arts",
     members: 156,
-    rating: 4.6,
+    
     upcomingEvents: 2
   },
   {
@@ -67,7 +67,7 @@ const mockClubs: Club[] = [
     created_at: "2024-03-05T09:15:00Z",
     category: "Outdoor",
     members: 203,
-    rating: 4.7,
+    
     upcomingEvents: 1
   },
   {
@@ -82,7 +82,7 @@ const mockClubs: Club[] = [
     created_at: "2024-01-20T11:00:00Z",
     category: "Academic",
     members: 89,
-    rating: 4.9,
+    
     upcomingEvents: 4
   }
 ];
@@ -92,7 +92,7 @@ const Clubs = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
-  const [ratingFilter, setRatingFilter] = useState<string>("All");
+  
   const [sortBy, setSortBy] = useState<string>("Rating");
   const { toast } = useToast();
 
@@ -123,14 +123,10 @@ const Clubs = () => {
   const filteredAndSortedClubs = clubs
     .filter(club => {
       if (categoryFilter !== "All" && club.category !== categoryFilter) return false;
-      if (ratingFilter === "4.5+" && club.rating < 4.5) return false;
-      if (ratingFilter === "4.0+" && club.rating < 4.0) return false;
       return true;
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case "Rating":
-          return b.rating - a.rating;
         case "Members":
           return b.members - a.members;
         case "Events":
@@ -188,23 +184,12 @@ const Clubs = () => {
             </SelectContent>
           </Select>
 
-          <Select value={ratingFilter} onValueChange={setRatingFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Rating" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Ratings</SelectItem>
-              <SelectItem value="4.5+">4.5+ Stars</SelectItem>
-              <SelectItem value="4.0+">4.0+ Stars</SelectItem>
-            </SelectContent>
-          </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Rating">Sort by Rating</SelectItem>
               <SelectItem value="Members">Sort by Members</SelectItem>
               <SelectItem value="Events">Sort by Events</SelectItem>
             </SelectContent>
@@ -263,33 +248,21 @@ const Clubs = () => {
                   </p>
                   
                   <div className="flex items-center justify-between mb-4 text-sm">
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                      <span className="font-medium">{club.rating}</span>
-                    </div>
                     <span className="text-muted-foreground">
                       {club.upcomingEvents} upcoming events
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex space-x-2">
-                      {club.website && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={club.website} target="_blank" rel="noopener noreferrer">
-                            <Globe className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => window.location.href = `/club/${club.id}`}
-                      >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        View Club
-                      </Button>
-                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.location.href = `/club/${club.id}`}
+                      className="w-full"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      View Club
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
