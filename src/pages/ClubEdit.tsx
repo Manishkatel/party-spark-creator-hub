@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const ClubCreate = () => {
+const ClubEdit = () => {
+  const { clubId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -27,10 +28,10 @@ const ClubCreate = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    checkAuthAndFetchClub();
+  }, [clubId]);
 
-  const checkAuth = async () => {
+  const checkAuthAndFetchClub = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate('/auth');
@@ -46,7 +47,7 @@ const ClubCreate = () => {
     if (!profile || profile.role !== 'club') {
       toast({
         title: "Access Denied",
-        description: "Only club accounts can create clubs.",
+        description: "Only club accounts can edit clubs.",
         variant: "destructive",
       });
       navigate('/');
@@ -54,17 +55,46 @@ const ClubCreate = () => {
     }
     
     setUser({ ...user, ...profile });
+
+    // Fetch club data
+    const { data: clubData, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .eq('id', clubId)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (error || !clubData) {
+      toast({
+        title: "Error",
+        description: "Club not found or you don't have permission to edit it.",
+        variant: "destructive",
+      });
+      navigate('/clubs');
+      return;
+    }
+
+    setFormData({
+      name: clubData.name || "",
+      description: clubData.description || "",
+      contact_email: clubData.contact_email || "",
+      contact_phone: clubData.contact_phone || "",
+      website: clubData.website || "",
+      logo_url: clubData.logo_url || "",
+      club_type: (clubData as any).club_type || "",
+      custom_type: (clubData as any).custom_type || ""
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !clubId) return;
 
     setLoading(true);
     
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('clubs')
-      .insert({
+      .update({
         name: formData.name,
         description: formData.description,
         contact_email: formData.contact_email,
@@ -72,24 +102,23 @@ const ClubCreate = () => {
         website: formData.website,
         logo_url: formData.logo_url,
         club_type: formData.club_type === 'other' ? 'other' : formData.club_type,
-        custom_type: formData.club_type === 'other' ? formData.custom_type : null,
-        owner_id: user.user_id
+        custom_type: formData.club_type === 'other' ? formData.custom_type : null
       })
-      .select()
-      .single();
+      .eq('id', clubId)
+      .eq('owner_id', user.user_id);
 
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to create club",
+        description: "Failed to update club",
         variant: "destructive",
       });
     } else {
       toast({
         title: "Success!",
-        description: "Club created successfully"
+        description: "Club updated successfully"
       });
-      navigate(`/club/${data.id}/dashboard`);
+      navigate(`/club/${clubId}/dashboard`);
     }
     
     setLoading(false);
@@ -109,28 +138,14 @@ const ClubCreate = () => {
     { value: 'other', label: 'Other' }
   ];
 
-  if (!user || user.role !== 'club') {
-    return (
-      <Layout>
-        <div className="max-w-2xl mx-auto pt-8">
-          <Card>
-            <CardContent className="text-center py-12">
-              <p>Checking permissions...</p>
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="max-w-2xl mx-auto pt-8 pb-16">
         <Card>
           <CardHeader>
-            <CardTitle>Create Your Club</CardTitle>
+            <CardTitle>Edit Club</CardTitle>
             <CardDescription>
-              Set up your club profile to start creating and managing events
+              Update your club information and settings
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -230,9 +245,18 @@ const ClubCreate = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating Club..." : "Create Club"}
-              </Button>
+              <div className="flex gap-4">
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Updating..." : "Update Club"}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate(`/club/${clubId}/dashboard`)}
+                >
+                  Cancel
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -241,4 +265,4 @@ const ClubCreate = () => {
   );
 };
 
-export default ClubCreate;
+export default ClubEdit;

@@ -1,9 +1,11 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -11,17 +13,28 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-const EventForm = () => {
+interface EventFormProps {
+  clubs: any[];
+  user: any;
+}
+
+const EventForm = ({ clubs, user }: EventFormProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("");
   const [isVirtual, setIsVirtual] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     location: "",
-    theme: "classic"
+    price: "",
+    max_attendees: "",
+    club_id: "",
+    additional_info: ""
   });
   const [step, setStep] = useState(1);
 
@@ -56,19 +69,54 @@ const EventForm = () => {
     setStep(prev => prev - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Implement event creation logic here
-    toast({
-      title: "Event created successfully!",
-      description: "Your event page is ready to be shared"
-    });
+    if (!date || !time || !formData.club_id) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    // Combine date and time
+    const eventDateTime = new Date(date);
+    const [hours, minutes] = time.split(':');
+    eventDateTime.setHours(parseInt(hours), parseInt(minutes));
+
+    const { error } = await supabase
+      .from('events')
+      .insert({
+        title: formData.title,
+        description: formData.description,
+        event_date: eventDateTime.toISOString(),
+        location: isVirtual ? 'Virtual Event' : formData.location,
+        price: formData.price ? parseFloat(formData.price) : 0,
+        max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
+        club_id: formData.club_id,
+        created_by: user.user_id,
+        additional_info: formData.additional_info
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create event",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Event created successfully!",
+        description: "Your event is now live"
+      });
+      navigate('/my-events');
+    }
     
-    // Redirect to the event page (simulated)
-    setTimeout(() => {
-      window.location.href = "/my-events";
-    }, 1500);
+    setLoading(false);
   };
 
   return (
@@ -98,7 +146,23 @@ const EventForm = () => {
         {step === 1 && (
           <div className="space-y-4 animate-fade-in">
             <div>
-              <Label htmlFor="title">Event Title</Label>
+              <Label htmlFor="club_id">Select Club *</Label>
+              <Select value={formData.club_id} onValueChange={(value) => setFormData(prev => ({ ...prev, club_id: value }))}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Choose a club" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clubs.map((club) => (
+                    <SelectItem key={club.id} value={club.id}>
+                      {club.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="title">Event Title *</Label>
               <Input
                 id="title"
                 name="title"
@@ -183,7 +247,7 @@ const EventForm = () => {
             
             {!isVirtual && (
               <div>
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">Location *</Label>
                 <Input
                   id="location"
                   name="location"
@@ -194,6 +258,37 @@ const EventForm = () => {
                 />
               </div>
             )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="price">Price ($)</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="max_attendees">Max Attendees</Label>
+                <Input
+                  id="max_attendees"
+                  name="max_attendees"
+                  type="number"
+                  min="1"
+                  value={formData.max_attendees}
+                  onChange={handleChange}
+                  placeholder="Unlimited"
+                  className="mt-1"
+                />
+              </div>
+            </div>
             
             <div className="pt-4 flex justify-between">
               <Button type="button" variant="outline" onClick={handlePrevious}>
@@ -209,49 +304,23 @@ const EventForm = () => {
         {step === 3 && (
           <div className="space-y-4 animate-fade-in">
             <div>
-              <Label>Choose a Theme</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                <div 
-                  className={`border ${formData.theme === 'classic' ? 'border-primary ring-2 ring-primary/30' : 'border-border'} 
-                             rounded-lg p-4 cursor-pointer hover:border-primary transition-colors`}
-                  onClick={() => setFormData(prev => ({ ...prev, theme: 'classic' }))}
-                >
-                  <div className="h-32 bg-gradient-to-r from-party-purple/20 to-party-pink/20 rounded-md mb-3 flex items-center justify-center">
-                    <span className="font-semibold">Classic</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Simple, elegant design</p>
-                </div>
-                
-                <div 
-                  className={`border ${formData.theme === 'celebration' ? 'border-primary ring-2 ring-primary/30' : 'border-border'} 
-                             rounded-lg p-4 cursor-pointer hover:border-primary transition-colors`}
-                  onClick={() => setFormData(prev => ({ ...prev, theme: 'celebration' }))}
-                >
-                  <div className="h-32 bg-gradient-to-r from-[#FEC6A1]/30 to-[#FEF7CD]/30 rounded-md mb-3 flex items-center justify-center">
-                    <span className="font-semibold">Celebration</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Festive and colorful</p>
-                </div>
-                
-                <div 
-                  className={`border ${formData.theme === 'minimalist' ? 'border-primary ring-2 ring-primary/30' : 'border-border'} 
-                             rounded-lg p-4 cursor-pointer hover:border-primary transition-colors`}
-                  onClick={() => setFormData(prev => ({ ...prev, theme: 'minimalist' }))}
-                >
-                  <div className="h-32 bg-muted rounded-md mb-3 flex items-center justify-center">
-                    <span className="font-semibold">Minimalist</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Clean and modern</p>
-                </div>
-              </div>
+              <Label htmlFor="additional_info">Additional Information</Label>
+              <Textarea
+                id="additional_info"
+                name="additional_info"
+                value={formData.additional_info}
+                onChange={handleChange}
+                placeholder="Any additional details about the event..."
+                className="mt-1 min-h-32"
+              />
             </div>
             
             <div className="pt-6 flex justify-between">
               <Button type="button" variant="outline" onClick={handlePrevious}>
                 Previous Step
               </Button>
-              <Button type="submit">
-                Create Event
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating Event..." : "Create Event"}
               </Button>
             </div>
           </div>

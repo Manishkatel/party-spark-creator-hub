@@ -1,62 +1,90 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import EventForm from "@/components/events/EventForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, AlertCircle } from "lucide-react";
+import EventForm from "@/components/events/EventForm";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Create = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [clubs, setClubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      
-      // Check if user has club role
-      if (parsedUser.role !== 'club') {
-        toast({
-          title: "Access Denied",
-          description: "Only club accounts can create events.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // Redirect to auth if not logged in
-      window.location.href = "/auth";
+    checkAuthAndFetchClubs();
+  }, []);
+
+  const checkAuthAndFetchClubs = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth');
       return;
     }
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!profile || profile.role !== 'club') {
+      toast({
+        title: "Access Denied",
+        description: "Only club accounts can create events.",
+        variant: "destructive",
+      });
+      navigate('/');
+      return;
+    }
+    
+    setUser({ ...user, ...profile });
+
+    // Fetch user's clubs
+    const { data: clubsData } = await supabase
+      .from('clubs')
+      .select('*')
+      .eq('owner_id', user.id);
+    
+    setClubs(clubsData || []);
     setLoading(false);
-  }, [toast]);
+  };
 
   if (loading) {
-    return (
-      <Layout>
-        <div className="max-w-7xl mx-auto pt-8 pb-16">
-          <div className="text-center">Loading...</div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!user) {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto pt-8">
           <Card>
             <CardContent className="text-center py-12">
-              <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Authentication Required</h3>
-              <p className="text-muted-foreground mb-4">
-                Please sign in to create events.
-              </p>
-              <Button onClick={() => window.location.href = "/auth"}>
-                Sign In
+              <p>Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user || user.role !== 'club') {
+    return (
+      <Layout>
+        <div className="max-w-2xl mx-auto pt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Access Denied</CardTitle>
+              <CardDescription>
+                Only club accounts can create events. Please sign in with a club account or create one.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+                Return to Home
+              </Button>
+              <Button onClick={() => navigate('/club/create')} className="w-full">
+                Create Club Account
               </Button>
             </CardContent>
           </Card>
@@ -65,26 +93,21 @@ const Create = () => {
     );
   }
 
-  if (user.role !== 'club') {
+  if (clubs.length === 0) {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto pt-8">
           <Card>
-            <CardContent className="text-center py-12">
-              <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Club Account Required</h3>
-              <p className="text-muted-foreground mb-4">
-                Only club accounts can create events. If you represent a club or organization, 
-                please create a club account to start organizing events.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Button variant="outline" onClick={() => window.location.href = "/"}>
-                  Back to Home
-                </Button>
-                <Button onClick={() => window.location.href = "/auth"}>
-                  Create Club Account
-                </Button>
-              </div>
+            <CardHeader>
+              <CardTitle>No Clubs Found</CardTitle>
+              <CardDescription>
+                You need to create a club before you can create events.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={() => navigate('/club/create')} className="w-full">
+                Create Your First Club
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -94,14 +117,15 @@ const Create = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto pt-8 pb-16">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Create New Event</h1>
-          <p className="text-muted-foreground mt-2">
-            Organize an amazing event for your club and the university community.
+      <div className="max-w-6xl mx-auto pt-8 pb-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Create New Event</h1>
+          <p className="text-xl text-muted-foreground">
+            Fill out the details for your event below
           </p>
         </div>
-        <EventForm />
+        
+        <EventForm clubs={clubs} user={user} />
       </div>
     </Layout>
   );
