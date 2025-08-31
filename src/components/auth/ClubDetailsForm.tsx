@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { ProfilePictureUpload } from "./ProfilePictureUpload";
 
 const clubTypes = [
   "Academic",
@@ -33,6 +34,8 @@ interface ClubDetailsFormProps {
   setContactPhone: (phone: string) => void;
   website: string;
   setWebsite: (website: string) => void;
+  clubLogo: File | null;
+  setClubLogo: (logo: File | null) => void;
 }
 
 export const ClubDetailsForm = ({
@@ -49,7 +52,9 @@ export const ClubDetailsForm = ({
   contactPhone,
   setContactPhone,
   website,
-  setWebsite
+  setWebsite,
+  clubLogo,
+  setClubLogo
 }: ClubDetailsFormProps) => {
   return (
     <div className="space-y-4">
@@ -62,6 +67,14 @@ export const ClubDetailsForm = ({
       
       <Card>
         <CardContent className="pt-6 space-y-4">
+          <div className="space-y-2">
+            <Label>Club Logo</Label>
+            <ProfilePictureUpload 
+              onImageChange={setClubLogo}
+              fullName={clubName || "Club"}
+            />
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="club-name">Club/Organization Name *</Label>
             <Input

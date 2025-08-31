@@ -42,6 +42,7 @@ const Auth = () => {
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [website, setWebsite] = useState("");
+  const [clubLogo, setClubLogo] = useState<File | null>(null);
   
   const { toast } = useToast();
 
@@ -493,6 +494,8 @@ const Auth = () => {
                       setContactPhone={setContactPhone}
                       website={website}
                       setWebsite={setWebsite}
+                      clubLogo={clubLogo}
+                      setClubLogo={setClubLogo}
                     />
                   )}
 
