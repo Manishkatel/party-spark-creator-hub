@@ -33,6 +33,7 @@ const Auth = () => {
   const [signupStep, setSignupStep] = useState(1);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
+  const [yearInCollege, setYearInCollege] = useState("");
   
   // Club details states
   const [clubName, setClubName] = useState("");
@@ -140,18 +141,19 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: undefined, // No email confirmation needed
-          data: {
-            full_name: fullName,
-            role: role,
-            interests: role === "regular" ? interests : [],
-            club_name: role === "club" ? clubName : "",
-            club_description: role === "club" ? clubDescription : "",
-            club_type: role === "club" ? clubType : "",
-            custom_type: role === "club" ? customType : "",
-            contact_email: role === "club" ? contactEmail : "",
-            contact_phone: role === "club" ? contactPhone : "",
-            website: role === "club" ? website : ""
-          }
+            data: {
+              full_name: fullName,
+              role: role,
+              interests: role === "regular" ? interests : [],
+              year_in_college: role === "regular" ? yearInCollege : "",
+              club_name: role === "club" ? clubName : "",
+              club_description: role === "club" ? clubDescription : "",
+              club_type: role === "club" ? clubType : "",
+              custom_type: role === "club" ? customType : "",
+              contact_email: role === "club" ? contactEmail : "",
+              contact_phone: role === "club" ? contactPhone : "",
+              website: role === "club" ? website : ""
+            }
         }
       });
 
@@ -448,16 +450,11 @@ const Auth = () => {
                         </Label>
                       </div>
                     </RadioGroup>
-                  </div>
-                  
-                  <ProfilePictureUpload 
-                    onImageChange={setProfilePicture} 
-                    fullName={fullName}
-                  />
-                  
-                  <Button type="submit" className="w-full">
-                    Continue
-                  </Button>
+                   </div>
+                   
+                   <Button type="submit" className="w-full">
+                     Continue
+                   </Button>
                 </form>
               )}
 
@@ -474,10 +471,57 @@ const Auth = () => {
                   </Button>
 
                   {role === "regular" ? (
-                    <InterestsSelection
-                      selectedInterests={interests}
-                      onInterestsChange={setInterests}
-                    />
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-lg font-semibold">Complete Your Profile</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Tell us more about yourself and your interests.
+                        </p>
+                      </div>
+                      
+                      <Card>
+                        <CardContent className="pt-6 space-y-4">
+                          <div className="space-y-2">
+                            <Label>Profile Picture</Label>
+                            <ProfilePictureUpload 
+                              onImageChange={setProfilePicture} 
+                              fullName={fullName}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Year in College</Label>
+                            <RadioGroup value={yearInCollege} onValueChange={setYearInCollege}>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="freshman" id="freshman" />
+                                <Label htmlFor="freshman">Freshman</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="sophomore" id="sophomore" />
+                                <Label htmlFor="sophomore">Sophomore</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="junior" id="junior" />
+                                <Label htmlFor="junior">Junior</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="senior" id="senior" />
+                                <Label htmlFor="senior">Senior</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="other" id="year-other" />
+                                <Label htmlFor="year-other">Other</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <InterestsSelection
+                        selectedInterests={interests}
+                        onInterestsChange={setInterests}
+                      />
+                    </div>
                   ) : (
                     <ClubDetailsForm
                       clubName={clubName}
