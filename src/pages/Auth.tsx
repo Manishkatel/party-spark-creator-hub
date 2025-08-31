@@ -138,6 +138,7 @@ const Auth = () => {
         email,
         password,
         options: {
+          emailRedirectTo: undefined, // No email confirmation needed
           data: {
             full_name: fullName,
             role: role,
@@ -183,10 +184,8 @@ const Auth = () => {
           description: "Account created successfully! Welcome aboard!",
         });
         
-        // Redirect to appropriate dashboard
-        setTimeout(() => {
-          navigate(role === "club" ? "/club-dashboard" : "/");
-        }, 1000);
+        // Immediate redirect to appropriate dashboard
+        navigate(role === "club" ? "/club-dashboard" : "/");
       }
     } catch (error: any) {
       toast({
@@ -250,7 +249,8 @@ const Auth = () => {
           title: "Success!",
           description: "Signed in successfully!",
         });
-        // Navigation will be handled by auth state change
+        // Immediate redirect
+        navigate(signinRole === "club" ? "/club-dashboard" : "/");
       }
     } catch (error: any) {
       let errorMessage = "Failed to sign in";
