@@ -1,33 +1,104 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Users, LogOut, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from '@supabase/supabase-js';
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for user in localStorage
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Fetch profile data when user signs in
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      setProfile(profileData);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const cleanupAuthState = () => {
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  };
 
   const handleSignOut = async () => {
     try {
-      localStorage.removeItem('currentUser');
+      // Clean up auth state
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Ignore errors
+      }
+      
       setUser(null);
+      setSession(null);
+      setProfile(null);
+      
       toast({
         title: "Success",
         description: "Signed out successfully",
       });
-      window.location.href = "/";
+      
+      // Force page reload for a clean state
+      window.location.href = '/';
     } catch (error: any) {
       toast({
         title: "Error",
@@ -62,7 +133,7 @@ const Navbar = () => {
               </Link>
               {user && (
                 <>
-                  {user.role === 'club' && (
+                  {profile?.role === 'club' && (
                     <Link to="/create" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                       Create Event
                     </Link>
@@ -151,7 +222,7 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                {user.role === 'club' && (
+                {profile?.role === 'club' && (
                   <Link 
                     to="/create" 
                     className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
