@@ -14,8 +14,10 @@ const Auth = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"regular" | "club">("regular");
+  const [signinRole, setSigninRole] = useState<"regular" | "club">("regular");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -65,6 +67,25 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -135,6 +156,26 @@ const Auth = () => {
       }
 
       if (data.user) {
+        // Check if the user's role matches the selected signin role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (profile && profile.role !== signinRole) {
+          toast({
+            title: "Wrong Account Type",
+            description: `This account is registered as a ${profile.role} user. Please select the correct account type.`,
+            variant: "destructive",
+          });
+          
+          // Sign out the user since role doesn't match
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
         toast({
           title: "Success!",
           description: "Signed in successfully!",
@@ -198,6 +239,25 @@ const Auth = () => {
                     required
                   />
                 </div>
+                <div className="space-y-3">
+                  <Label>Account Type</Label>
+                  <RadioGroup value={signinRole} onValueChange={(value) => setSigninRole(value as "regular" | "club")}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="regular" id="signin-regular" />
+                      <Label htmlFor="signin-regular" className="cursor-pointer">
+                        <div className="font-medium">Regular User</div>
+                        <div className="text-sm text-muted-foreground">Join events and discover clubs</div>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="club" id="signin-club" />
+                      <Label htmlFor="signin-club" className="cursor-pointer">
+                        <div className="font-medium">Club/Organization</div>
+                        <div className="text-sm text-muted-foreground">Create and manage events for your club</div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
@@ -235,6 +295,19 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    placeholder="Minimum 6 characters"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                  <Input
+                    id="signup-confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    placeholder="Re-enter your password"
                   />
                 </div>
                 <div className="space-y-3">
