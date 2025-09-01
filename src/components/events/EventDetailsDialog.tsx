@@ -1,8 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, Share, DollarSign, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface Event {
   id: string;
@@ -25,6 +27,7 @@ interface EventDetailsDialogProps {
 
 const EventDetailsDialog = ({ event, isOpen, onClose }: EventDetailsDialogProps) => {
   const { toast } = useToast();
+  const [isJoined, setIsJoined] = useState(false);
 
   if (!event) return null;
 
@@ -79,9 +82,18 @@ const EventDetailsDialog = ({ event, isOpen, onClose }: EventDetailsDialogProps)
   };
 
   const handleJoinEvent = () => {
+    setIsJoined(true);
     toast({
-      title: "Interest Registered!",
-      description: `You're now interested in "${event.title}"`,
+      title: "Successfully Joined!",
+      description: `You've joined "${event.title}"`,
+    });
+  };
+
+  const handleLeaveEvent = () => {
+    setIsJoined(false);
+    toast({
+      title: "Left Event",
+      description: `You've left "${event.title}"`,
     });
   };
 
@@ -173,9 +185,51 @@ const EventDetailsDialog = ({ event, isOpen, onClose }: EventDetailsDialogProps)
 
           {/* Action Button */}
           <div className="flex justify-center pt-4 border-t">
-            <Button size="lg" onClick={handleJoinEvent} className="w-full md:w-auto px-12">
-              Join Event
-            </Button>
+            {!isJoined ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="lg" className="w-full md:w-auto px-12">
+                    Join Event
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Join Event</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to join "{event.title}"? You'll receive updates about this event.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleJoinEvent}>
+                      Yes, Join Event
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="lg" variant="outline" className="w-full md:w-auto px-12">
+                    Leave Event
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Leave Event</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to leave "{event.title}"? You'll no longer receive updates about this event.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLeaveEvent}>
+                      Yes, Leave Event
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
       </DialogContent>

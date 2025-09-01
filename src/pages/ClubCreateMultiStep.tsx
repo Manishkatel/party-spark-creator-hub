@@ -195,7 +195,7 @@ const ClubCreateMultiStep = () => {
         description: "Club created successfully!"
       });
       
-      navigate(`/club/${clubData.id}/dashboard`);
+      navigate('/clubs');
     } catch (error: any) {
       toast({
         title: "Error",
