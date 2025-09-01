@@ -70,7 +70,7 @@ const ClubDashboard = () => {
       const { data: userClubs } = await supabase
         .from('clubs')
         .select('*')
-        .eq('owner_id', user.id)
+        .eq('owner_id', user.user_id) // Use user_id instead of id
         .order('created_at', { ascending: false });
       
       if (!userClubs || userClubs.length === 0) {
