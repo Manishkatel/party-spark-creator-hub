@@ -140,7 +140,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: undefined, // No email confirmation needed
+          emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: fullName,
               role: role,
@@ -187,8 +187,10 @@ const Auth = () => {
           description: "Account created successfully! Welcome aboard!",
         });
         
-        // Immediate redirect to appropriate dashboard
-        navigate(role === "club" ? "/club/create" : "/");
+        // Force page reload for clean auth state
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
       }
     } catch (error: any) {
       toast({
@@ -252,22 +254,11 @@ const Auth = () => {
           title: "Success!",
           description: "Signed in successfully!",
         });
-        // Check if club user has created a club
-        if (signinRole === "club") {
-          const { data: clubs } = await supabase
-            .from('clubs')
-            .select('id')
-            .eq('owner_id', data.user.id)
-            .limit(1);
-          
-          if (clubs && clubs.length > 0) {
-            navigate(`/club/${clubs[0].id}/dashboard`);
-          } else {
-            navigate('/club/create');
-          }
-        } else {
-          navigate('/');
-        }
+        
+        // Force page reload for clean auth state
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
       }
     } catch (error: any) {
       let errorMessage = "Failed to sign in";

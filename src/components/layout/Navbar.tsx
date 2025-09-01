@@ -56,8 +56,9 @@ const Navbar = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
+      console.log('Profile data fetched:', profileData);
       setProfile(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
