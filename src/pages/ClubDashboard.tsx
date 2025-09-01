@@ -90,7 +90,7 @@ const ClubDashboard = () => {
       const { data: events } = await supabase
         .from('events')
         .select('*, clubs(name)')
-        .eq('created_by', user.id)
+        .eq('created_by', user.user_id)
         .order('event_date', { ascending: false });
       
       setAllEvents(events || []);

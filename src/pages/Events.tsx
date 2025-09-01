@@ -312,7 +312,7 @@ const Events = () => {
                       description: `You're now interested in "${event.title}"`,
                     });
                   }}>
-                    Join Event
+                    Interested
                   </Button>
                 </div>
               </CardContent>
