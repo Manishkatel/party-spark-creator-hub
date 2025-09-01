@@ -90,7 +90,7 @@ const ClubDashboard = () => {
       const { data: events } = await supabase
         .from('events')
         .select('*, clubs(name)')
-        .in('club_id', userClubs.map(club => club.id))
+        .eq('created_by', user.id)
         .order('event_date', { ascending: false });
       
       setAllEvents(events || []);
@@ -136,6 +136,27 @@ const ClubDashboard = () => {
 
   const handleEditClub = (clubId: string) => {
     navigate(`/club/${clubId}/edit`);
+  };
+
+  const handleDeleteClub = async (clubId: string) => {
+    const { error } = await supabase
+      .from('clubs')
+      .delete()
+      .eq('id', clubId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete club",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Club deleted successfully",
+      });
+      fetchUserData();
+    }
   };
 
   const handleEditEvent = (eventId: string) => {
@@ -239,6 +260,13 @@ const ClubDashboard = () => {
                         onClick={() => handleEditClub(club.id)}
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteClub(club.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
