@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Users, Filter } from "lucide-react";
+import { Calendar, MapPin, Users, Filter, Share } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Event {
   id: string;
@@ -98,12 +99,42 @@ const Events = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setEvents(allMockEvents);
-      setLoading(false);
-    }, 1000);
+    fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const { data: events, error } = await supabase
+        .from('events')
+        .select('*, clubs(name)')
+        .order('event_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        setEvents(allMockEvents); // Fallback to mock data
+      } else {
+        // Transform Supabase data to match our Event interface
+        const transformedEvents = events?.map(event => ({
+          id: event.id,
+          title: event.title,
+          description: event.description || '',
+          date: event.event_date,
+          location: event.location || '',
+          club: (event as any).clubs?.name || 'Unknown Club',
+          attendees: Math.floor(Math.random() * 300), // Mock data for now
+          price: event.price || 0,
+          category: 'Academic' // Default category for now
+        })) || [];
+        setEvents([...transformedEvents, ...allMockEvents]);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setEvents(allMockEvents); // Fallback to mock data
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -126,6 +157,27 @@ const Events = () => {
       'Arts': 'bg-pink-100 text-pink-800',
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleShareEvent = async (event: Event) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event.title,
+          text: `Check out this event: ${event.title} by ${event.club}`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(`${event.title} by ${event.club} - ${window.location.href}`);
+      toast({
+        title: "Link copied!",
+        description: "Event link has been copied to clipboard",
+      });
+    }
   };
 
   const filteredAndSortedEvents = events
@@ -256,8 +308,9 @@ const Events = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Details
+                  <Button variant="outline" size="sm" onClick={() => handleShareEvent(event)}>
+                    <Share className="h-4 w-4 mr-1" />
+                    Share
                   </Button>
                   <Button size="sm" className="flex-1" onClick={() => {
                     toast({

@@ -113,7 +113,7 @@ const EventForm = ({ clubs, user }: EventFormProps) => {
         title: "Event created successfully!",
         description: "Your event is now live"
       });
-      navigate('/my-events');
+      navigate('/dashboard');
     }
     
     setLoading(false);
