@@ -219,326 +219,129 @@ const ClubDashboard = () => {
           </div>
         </div>
 
-        {/* Club Selector */}
-        {clubs.length > 1 && (
-          <div className="mb-6">
-            <label className="text-sm font-medium mb-2 block">Select Club to Manage:</label>
-            <Select value={selectedClub?.id || ''} onValueChange={handleClubSelect}>
-              <SelectTrigger className="w-[300px]">
-                <SelectValue placeholder="Select a club" />
-              </SelectTrigger>
-              <SelectContent>
-                {clubs.map((club) => (
-                  <SelectItem key={club.id} value={club.id}>
-                    {club.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* My Clubs Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold flex items-center gap-2">
+              <Building className="h-6 w-6" />
+              My Clubs ({clubs.length})
+            </h2>
           </div>
-        )}
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Clubs</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalClubs}</div>
-            </CardContent>
-          </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalEvents}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Applications</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalApplications}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Board Members</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalMembers}</div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4">
+            {clubs.map((club) => (
+              <Card key={club.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-lg">{club.name}</h3>
+                      <p className="text-sm text-muted-foreground">{club.description}</p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="secondary">
+                          {club.club_type === 'other' ? club.custom_type : club.club_type}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Created {new Date(club.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/club/${club.id}`)}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditClub(club.id)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {clubs.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Building className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">No clubs created yet</p>
+                  <Button onClick={() => navigate('/club/create')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Club
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="clubs">My Clubs</TabsTrigger>
-            <TabsTrigger value="events">All Events</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Quick Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    onClick={handleCreateEvent} 
-                    className="w-full justify-start"
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Event
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/club/create')} 
-                    className="w-full justify-start"
-                    variant="outline"
-                  >
-                    <Building className="h-4 w-4 mr-2" />
-                    Create New Club
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/my-events')} 
-                    className="w-full justify-start"
-                    variant="outline"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    View All Events
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Recent Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>• {stats.totalEvents} total events created</p>
-                    <p>• {stats.totalApplications} pending applications</p>
-                    <p>• {stats.totalMembers} board members across all clubs</p>
-                    <p>• {stats.totalClubs} clubs managed</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Recent Events */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Events</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {allEvents.slice(0, 5).map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{event.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {(event as any).clubs?.name} • {new Date(event.event_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEditEvent(event.id)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {allEvents.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">No events created yet</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="clubs">
-            <div className="grid gap-4">
-              {clubs.map((club) => (
-                <Card key={club.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">{club.name}</h3>
-                        <p className="text-sm text-muted-foreground">{club.description}</p>
-                        <div className="flex gap-2 mt-2">
-                          <Badge variant="secondary">
-                            {club.club_type === 'other' ? club.custom_type : club.club_type}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Created {new Date(club.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/club/${club.id}`)}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditClub(club.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="events">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">All Events</h2>
-              <Button onClick={handleCreateEvent}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Event
-              </Button>
-            </div>
-            
-            <div className="grid gap-4">
-              {allEvents.map((event) => (
-                <Card key={event.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {(event as any).clubs?.name} • {new Date(event.event_date).toLocaleDateString()}
-                        </p>
-                        <div className="flex gap-2 items-center mt-2">
-                          <Badge variant={event.status === 'active' ? 'default' : 'secondary'}>
-                            {event.status || 'active'}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {event.share_count || 0} shares
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditEvent(event.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteEvent(event.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {allEvents.length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <p className="text-muted-foreground">No events created yet</p>
-                    <Button onClick={handleCreateEvent} className="mt-4">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Event
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="profile">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    User Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Full Name</label>
-                    <p className="text-sm text-muted-foreground">{user?.full_name || 'Not set'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Role</label>
-                    <p className="text-sm text-muted-foreground capitalize">{user?.role}</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {selectedClub && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Selected Club Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Club Name</label>
-                      <p className="text-sm text-muted-foreground">{selectedClub.name}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Club Type</label>
-                      <p className="text-sm text-muted-foreground capitalize">
-                        {selectedClub.club_type === 'other' ? selectedClub.custom_type : selectedClub.club_type}
+        {/* My Events Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold flex items-center gap-2">
+              <Calendar className="h-6 w-6" />
+              My Events ({allEvents.length})
+            </h2>
+          </div>
+          
+          <div className="grid gap-4">
+            {allEvents.map((event) => (
+              <Card key={event.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">{event.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {(event as any).clubs?.name} • {new Date(event.event_date).toLocaleDateString()}
                       </p>
+                      <div className="flex gap-2 items-center mt-2">
+                        <Badge variant={event.status === 'active' ? 'default' : 'secondary'}>
+                          {event.status || 'active'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {event.share_count || 0} shares
+                        </span>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Contact Email</label>
-                      <p className="text-sm text-muted-foreground">{selectedClub.contact_email || 'Not set'}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditEvent(event.id)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteEvent(event.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => handleEditClub(selectedClub.id)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Club Details
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {allEvents.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">No events created yet</p>
+                  <Button onClick={handleCreateEvent}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Event
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </Layout>
   );
