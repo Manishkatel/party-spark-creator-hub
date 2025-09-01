@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Users, Filter, Eye } from "lucide-react";
+import { Calendar, MapPin, Users, Filter, Eye, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import EventDetailsDialog from "@/components/events/EventDetailsDialog";
@@ -100,6 +100,7 @@ const Events = () => {
   const [sortBy, setSortBy] = useState<string>("Date");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [starredEvents, setStarredEvents] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -162,6 +163,18 @@ const Events = () => {
       'Arts': 'bg-pink-100 text-pink-800',
     };
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleStarEvent = (eventId: string) => {
+    setStarredEvents(prev => {
+      const newStarred = new Set(prev);
+      if (newStarred.has(eventId)) {
+        newStarred.delete(eventId);
+      } else {
+        newStarred.add(eventId);
+      }
+      return newStarred;
+    });
   };
 
   const handleViewDetails = (event: Event) => {
@@ -265,9 +278,21 @@ const Events = () => {
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start mb-2">
-                  <Badge className={getCategoryColor(event.category)} variant="secondary">
-                    {event.category}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getCategoryColor(event.category)} variant="secondary">
+                      {event.category}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleStarEvent(event.id)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Star 
+                        className={`w-4 h-4 ${starredEvents.has(event.id) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
+                      />
+                    </Button>
+                  </div>
                   {event.price === 0 ? (
                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                       FREE
