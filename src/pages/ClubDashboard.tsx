@@ -65,11 +65,27 @@ const ClubDashboard = () => {
   const fetchClubData = async () => {
     setLoading(true);
     
+    // If no clubId, fetch the user's club
+    let queryClubId = clubId;
+    if (!clubId) {
+      const { data: userClub } = await supabase
+        .from('clubs')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+      
+      if (!userClub) {
+        navigate('/club/create');
+        return;
+      }
+      queryClubId = userClub.id;
+    }
+    
     // Fetch club details
     const { data: clubData } = await supabase
       .from('clubs')
       .select('*')
-      .eq('id', clubId)
+      .eq('id', queryClubId)
       .eq('owner_id', user.id)
       .single();
     
@@ -87,10 +103,10 @@ const ClubDashboard = () => {
 
     // Fetch statistics  
     const [applicationsResult, eventsResult, achievementsResult, boardMembersResult] = await Promise.all([
-      supabase.from('club_applications' as any).select('id').eq('club_id', clubId),
-      supabase.from('events').select('*').eq('club_id', clubId),
-      supabase.from('achievements' as any).select('*').eq('club_id', clubId),
-      supabase.from('board_members' as any).select('*').eq('club_id', clubId)
+      supabase.from('club_applications' as any).select('id').eq('club_id', queryClubId),
+      supabase.from('events').select('*').eq('club_id', queryClubId),
+      supabase.from('achievements' as any).select('*').eq('club_id', queryClubId),
+      supabase.from('board_members' as any).select('*').eq('club_id', queryClubId)
     ]);
 
     setStats({
@@ -244,12 +260,17 @@ const ClubDashboard = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(event.event_date).toLocaleDateString()}
-                        </p>
-                        <Badge variant={(event as any).status === 'active' ? 'default' : 'secondary'}>
-                          {(event as any).status || 'active'}
-                        </Badge>
+                         <p className="text-sm text-muted-foreground">
+                           {new Date(event.event_date).toLocaleDateString()}
+                         </p>
+                         <div className="flex gap-2 items-center">
+                           <Badge variant={(event as any).status === 'active' ? 'default' : 'secondary'}>
+                             {(event as any).status || 'active'}
+                           </Badge>
+                           <span className="text-xs text-muted-foreground">
+                             {event.share_count || 0} shares
+                           </span>
+                         </div>
                       </div>
                       <div className="flex gap-2">
                         <Button

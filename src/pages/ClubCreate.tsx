@@ -71,7 +71,7 @@ const ClubCreate = () => {
         contact_phone: formData.contact_phone,
         website: formData.website,
         logo_url: formData.logo_url,
-        club_type: formData.club_type === 'other' ? 'other' : formData.club_type,
+        club_type: (formData.club_type === 'other' ? 'other' : formData.club_type) as 'academic' | 'sports' | 'cultural' | 'technical' | 'social' | 'professional' | 'other',
         custom_type: formData.club_type === 'other' ? formData.custom_type : null,
         owner_id: user.user_id
       })

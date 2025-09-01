@@ -169,7 +169,7 @@ const Auth = () => {
             .insert({
               name: clubName,
               description: clubDescription,
-              club_type: clubType === 'other' ? 'other' : clubType,
+              club_type: (clubType === 'other' ? 'other' : clubType) as 'academic' | 'sports' | 'cultural' | 'technical' | 'social' | 'professional' | 'other',
               custom_type: clubType === 'other' ? customType : null,
               contact_email: contactEmail,
               contact_phone: contactPhone || null,

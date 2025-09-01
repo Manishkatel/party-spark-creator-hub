@@ -14,11 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          club_id: string
+          created_at: string
+          date_achieved: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          date_achieved?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          date_achieved?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_members: {
+        Row: {
+          club_id: string
+          created_at: string
+          email: string | null
+          id: string
+          joined_date: string
+          name: string
+          photo_url: string | null
+          position: string | null
+          updated_at: string
+          year_in_college: string | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          joined_date?: string
+          name: string
+          photo_url?: string | null
+          position?: string | null
+          updated_at?: string
+          year_in_college?: string | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          joined_date?: string
+          name?: string
+          photo_url?: string | null
+          position?: string | null
+          updated_at?: string
+          year_in_college?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_applications: {
+        Row: {
+          application_message: string | null
+          club_id: string
+          created_at: string
+          id: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_message?: string | null
+          club_id: string
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_message?: string | null
+          club_id?: string
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_applications_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
+          club_type: Database["public"]["Enums"]["club_type"] | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
+          custom_type: string | null
           description: string | null
           id: string
           logo_url: string | null
@@ -28,9 +153,11 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          club_type?: Database["public"]["Enums"]["club_type"] | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
+          custom_type?: string | null
           description?: string | null
           id?: string
           logo_url?: string | null
@@ -40,9 +167,11 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          club_type?: Database["public"]["Enums"]["club_type"] | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
+          custom_type?: string | null
           description?: string | null
           id?: string
           logo_url?: string | null
@@ -55,6 +184,7 @@ export type Database = {
       }
       events: {
         Row: {
+          additional_info: string | null
           club_id: string
           created_at: string
           created_by: string
@@ -65,10 +195,13 @@ export type Database = {
           location: string
           max_attendees: number | null
           price: number | null
+          share_count: number | null
+          status: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          additional_info?: string | null
           club_id: string
           created_at?: string
           created_by: string
@@ -79,10 +212,13 @@ export type Database = {
           location: string
           max_attendees?: number | null
           price?: number | null
+          share_count?: number | null
+          status?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          additional_info?: string | null
           club_id?: string
           created_at?: string
           created_by?: string
@@ -93,6 +229,8 @@ export type Database = {
           location?: string
           max_attendees?: number | null
           price?: number | null
+          share_count?: number | null
+          status?: string | null
           title?: string
           updated_at?: string
         }
@@ -147,6 +285,14 @@ export type Database = {
       }
     }
     Enums: {
+      club_type:
+        | "academic"
+        | "sports"
+        | "cultural"
+        | "technical"
+        | "social"
+        | "professional"
+        | "other"
       user_role: "club" | "regular"
     }
     CompositeTypes: {
@@ -275,6 +421,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      club_type: [
+        "academic",
+        "sports",
+        "cultural",
+        "technical",
+        "social",
+        "professional",
+        "other",
+      ],
       user_role: ["club", "regular"],
     },
   },

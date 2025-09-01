@@ -134,9 +134,14 @@ const Navbar = () => {
               {user && (
                 <>
                   {profile?.role === 'club' && (
-                    <Link to="/create" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                      Create Event
-                    </Link>
+                    <>
+                      <Link to="/club-dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                        Dashboard
+                      </Link>
+                      <Link to="/create" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                        Create Event
+                      </Link>
+                    </>
                   )}
                   <Link to="/my-events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                     My Events
@@ -223,13 +228,22 @@ const Navbar = () => {
             {user && (
               <>
                 {profile?.role === 'club' && (
-                  <Link 
-                    to="/create" 
-                    className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Create Event
-                  </Link>
+                  <>
+                    <Link 
+                      to="/club-dashboard" 
+                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link 
+                      to="/create" 
+                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Create Event
+                    </Link>
+                  </>
                 )}
                 <Link 
                   to="/my-events" 
