@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Users, LogOut, Sun, Moon } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Menu, Users, LogOut, Sun, Moon, User as UserIcon, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,11 +135,6 @@ const Navbar = () => {
               </Link>
               {user && (
                 <>
-                  {profile?.role === 'club' && (
-                      <Link to="/club-profile" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                      Profile
-                    </Link>
-                  )}
                   {profile?.role !== 'club' && (
                     <>
                       <Link to="/create" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
@@ -145,9 +142,6 @@ const Navbar = () => {
                       </Link>
                       <Link to="/my-events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                         My Events
-                      </Link>
-                      <Link to="/profile" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                        Profile
                       </Link>
                     </>
                   )}
@@ -167,10 +161,47 @@ const Navbar = () => {
                       <Moon className="w-4 h-4" />
                     )}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-sm">
+                            {profile?.full_name ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="flex items-center justify-start gap-2 p-2">
+                        <div className="flex flex-col space-y-1 leading-none">
+                          <p className="font-medium">{profile?.full_name || 'User'}</p>
+                          <p className="w-[200px] truncate text-sm text-muted-foreground">
+                            {profile?.email}
+                          </p>
+                        </div>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to={profile?.role === 'club' ? '/club-profile' : '/profile'} className="cursor-pointer">
+                          <UserIcon className="mr-2 h-4 w-4" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      {profile?.role === 'club' && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/club-dashboard" className="cursor-pointer">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
@@ -231,15 +262,6 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                {profile?.role === 'club' && (
-                  <Link 
-                    to="/club-profile"
-                    className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                )}
                 {profile?.role !== 'club' && (
                   <>
                     <Link 
@@ -256,36 +278,54 @@ const Navbar = () => {
                     >
                       My Events
                     </Link>
-                    <Link 
-                      to="/profile" 
-                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Profile
-                    </Link>
                   </>
                 )}
-                <div className="px-3 py-2 text-sm text-muted-foreground border-t flex items-center justify-between">
+                <div className="border-t pt-2">
+                  <Link 
+                    to={profile?.role === 'club' ? '/club-profile' : '/profile'}
+                    className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserIcon className="w-4 h-4 mr-2" />
+                    Profile
+                  </Link>
+                  {profile?.role === 'club' && (
+                    <Link 
+                      to="/club-dashboard"
+                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium flex items-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  )}
+                </div>
+                <div className="border-t pt-2">
                   <Button
                     variant="ghost"
-                    size="sm"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="p-1"
+                    className="w-full justify-start"
                   >
                     {theme === "dark" ? (
-                      <Sun className="w-4 h-4" />
+                      <>
+                        <Sun className="w-4 h-4 mr-2" />
+                        Light Mode
+                      </>
                     ) : (
-                      <Moon className="w-4 h-4" />
+                      <>
+                        <Moon className="w-4 h-4 mr-2" />
+                        Dark Mode
+                      </>
                     )}
                   </Button>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium w-full text-left flex items-center"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </button>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium w-full text-left"
-                >
-                  <LogOut className="w-4 h-4 mr-2 inline" />
-                  Sign Out
-                </button>
               </>
             )}
             {!user && (
