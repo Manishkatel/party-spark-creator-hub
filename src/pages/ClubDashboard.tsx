@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Users, Calendar, Award, Settings, User, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, Users, Calendar, Award, Settings, User, FileText, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,16 +15,15 @@ const ClubDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
-  const [club, setClub] = useState<any>(null);
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [selectedClub, setSelectedClub] = useState<any>(null);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
   const [stats, setStats] = useState({
-    applications: 0,
-    members: 0,
-    activeEvents: 0,
-    achievements: 0
+    totalClubs: 0,
+    totalEvents: 0,
+    totalApplications: 0,
+    totalMembers: 0
   });
-  const [events, setEvents] = useState<any[]>([]);
-  const [achievements, setAchievements] = useState<any[]>([]);
-  const [boardMembers, setBoardMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,9 +32,9 @@ const ClubDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      fetchClubData();
+      fetchUserData();
     }
-  }, [user, clubId]);
+  }, [user]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -62,70 +62,79 @@ const ClubDashboard = () => {
     setUser({ ...user, ...profile });
   };
 
-  const fetchClubData = async () => {
+  const fetchUserData = async () => {
     setLoading(true);
     
-    // If no clubId, fetch the user's clubs and use the most recent one
-    let queryClubId = clubId;
-    if (!clubId) {
+    try {
+      // Fetch all user's clubs
       const { data: userClubs } = await supabase
         .from('clubs')
-        .select('id')
+        .select('*')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
       
       if (!userClubs || userClubs.length === 0) {
-        navigate('/club/create');
+        setLoading(false);
         return;
       }
-      queryClubId = userClubs[0].id;
-      // Update URL to include the club ID
-      navigate(`/club/${queryClubId}/dashboard`, { replace: true });
-      return;
-    }
-    
-    // Fetch club details
-    const { data: clubData } = await supabase
-      .from('clubs')
-      .select('*')
-      .eq('id', queryClubId)
-      .eq('owner_id', user.id)
-      .single();
-    
-    if (!clubData) {
+      
+      setClubs(userClubs);
+      
+      // Set selected club based on URL param or default to first club
+      const currentClub = clubId 
+        ? userClubs.find(club => club.id === clubId) 
+        : userClubs[0];
+      setSelectedClub(currentClub);
+      
+      // Fetch all events for all clubs
+      const { data: events } = await supabase
+        .from('events')
+        .select('*, clubs(name)')
+        .in('club_id', userClubs.map(club => club.id))
+        .order('event_date', { ascending: false });
+      
+      setAllEvents(events || []);
+      
+      // Calculate overall stats
+      const [applicationsResult, boardMembersResult] = await Promise.all([
+        supabase.from('club_applications' as any).select('id').in('club_id', userClubs.map(club => club.id)),
+        supabase.from('board_members' as any).select('id').in('club_id', userClubs.map(club => club.id))
+      ]);
+      
+      setStats({
+        totalClubs: userClubs.length,
+        totalEvents: events?.length || 0,
+        totalApplications: applicationsResult.data?.length || 0,
+        totalMembers: boardMembersResult.data?.length || 0
+      });
+      
+    } catch (error) {
+      console.error('Error fetching data:', error);
       toast({
-        title: "Club not found",
-        description: "This club doesn't exist or you don't have permission to access it.",
+        title: "Error",
+        description: "Failed to load dashboard data",
         variant: "destructive",
       });
-      navigate('/clubs');
-      return;
+    } finally {
+      setLoading(false);
     }
-    
-    setClub(clubData);
-
-    // Fetch statistics  
-    const [applicationsResult, eventsResult, achievementsResult, boardMembersResult] = await Promise.all([
-      supabase.from('club_applications' as any).select('id').eq('club_id', queryClubId),
-      supabase.from('events').select('*').eq('club_id', queryClubId),
-      supabase.from('achievements' as any).select('*').eq('club_id', queryClubId),
-      supabase.from('board_members' as any).select('*').eq('club_id', queryClubId)
-    ]);
-
-    setStats({
-      applications: applicationsResult.data?.length || 0,
-      members: boardMembersResult.data?.length || 0,
-      activeEvents: eventsResult.data?.filter((e: any) => e.status === 'active').length || 0,
-      achievements: achievementsResult.data?.length || 0
-    });
-
-    setEvents(eventsResult.data || []);
-    setAchievements(achievementsResult.data || []);
-    setBoardMembers(boardMembersResult.data || []);
-    setLoading(false);
   };
 
-  const handleEditClub = () => {
+  const handleClubSelect = (clubId: string) => {
+    const club = clubs.find(c => c.id === clubId);
+    setSelectedClub(club);
+    navigate(`/club/${clubId}/dashboard`, { replace: true });
+  };
+
+  const handleCreateEvent = () => {
+    if (selectedClub) {
+      navigate('/create', { state: { selectedClubId: selectedClub.id } });
+    } else {
+      navigate('/create');
+    }
+  };
+
+  const handleEditClub = (clubId: string) => {
     navigate(`/club/${clubId}/edit`);
   };
 
@@ -150,7 +159,7 @@ const ClubDashboard = () => {
         title: "Success",
         description: "Event deleted successfully",
       });
-      fetchClubData();
+      fetchUserData();
     }
   };
 
@@ -168,13 +177,20 @@ const ClubDashboard = () => {
     );
   }
 
-  if (!club) {
+  if (!clubs.length) {
     return (
       <Layout>
         <div className="max-w-6xl mx-auto pt-8">
           <Card>
+            <CardHeader>
+              <CardTitle>Welcome to Your Club Dashboard</CardTitle>
+              <CardDescription>You haven't created any clubs yet. Get started by creating your first club!</CardDescription>
+            </CardHeader>
             <CardContent className="text-center py-12">
-              <p>Club not found</p>
+              <Button onClick={() => navigate('/club/create')} size="lg">
+                <Plus className="h-5 w-5 mr-2" />
+                Create Your First Club
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -185,56 +201,82 @@ const ClubDashboard = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto pt-8 pb-16">
+        {/* Header with Action Buttons */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">{club.name}</h1>
-            <p className="text-muted-foreground">{club.description}</p>
+            <h1 className="text-3xl font-bold">Club Dashboard</h1>
+            <p className="text-muted-foreground">Manage your clubs and events</p>
           </div>
-          <Button onClick={handleEditClub} variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Club
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => navigate('/club/create')} variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Club
+            </Button>
+            <Button onClick={handleCreateEvent}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Event
+            </Button>
+          </div>
         </div>
+
+        {/* Club Selector */}
+        {clubs.length > 1 && (
+          <div className="mb-6">
+            <label className="text-sm font-medium mb-2 block">Select Club to Manage:</label>
+            <Select value={selectedClub?.id || ''} onValueChange={handleClubSelect}>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder="Select a club" />
+              </SelectTrigger>
+              <SelectContent>
+                {clubs.map((club) => (
+                  <SelectItem key={club.id} value={club.id}>
+                    {club.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Clubs</CardTitle>
+              <Building className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalClubs}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalEvents}</div>
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Applications</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.applications}</div>
+              <div className="text-2xl font-bold">{stats.totalApplications}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Board Members</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.members}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Events</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeEvents}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Achievements</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.achievements}</div>
+              <div className="text-2xl font-bold">{stats.totalMembers}</div>
             </CardContent>
           </Card>
         </div>
@@ -242,15 +284,13 @@ const ClubDashboard = () => {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="members">Board Members</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="clubs">My Clubs</TabsTrigger>
+            <TabsTrigger value="events">All Events</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -260,7 +300,7 @@ const ClubDashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button 
-                    onClick={() => navigate('/create')} 
+                    onClick={handleCreateEvent} 
                     className="w-full justify-start"
                     variant="outline"
                   >
@@ -268,20 +308,20 @@ const ClubDashboard = () => {
                     Create New Event
                   </Button>
                   <Button 
+                    onClick={() => navigate('/club/create')} 
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Building className="h-4 w-4 mr-2" />
+                    Create New Club
+                  </Button>
+                  <Button 
                     onClick={() => navigate('/my-events')} 
                     className="w-full justify-start"
                     variant="outline"
                   >
                     <Calendar className="h-4 w-4 mr-2" />
-                    View My Events
-                  </Button>
-                  <Button 
-                    onClick={handleEditClub} 
-                    className="w-full justify-start"
-                    variant="outline"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Club Details
+                    View All Events
                   </Button>
                 </CardContent>
               </Card>
@@ -295,43 +335,113 @@ const ClubDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>• {stats.activeEvents} active events</p>
-                    <p>• {stats.applications} pending applications</p>
-                    <p>• {stats.members} board members</p>
-                    <p>• {stats.achievements} achievements recorded</p>
+                    <p>• {stats.totalEvents} total events created</p>
+                    <p>• {stats.totalApplications} pending applications</p>
+                    <p>• {stats.totalMembers} board members across all clubs</p>
+                    <p>• {stats.totalClubs} clubs managed</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Recent Events */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Events</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {allEvents.slice(0, 5).map((event) => (
+                    <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{event.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {(event as any).clubs?.name} • {new Date(event.event_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditEvent(event.id)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {allEvents.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No events created yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="events" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Events</h2>
-              <Button onClick={() => navigate('/create')}>
+          <TabsContent value="clubs">
+            <div className="grid gap-4">
+              {clubs.map((club) => (
+                <Card key={club.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg">{club.name}</h3>
+                        <p className="text-sm text-muted-foreground">{club.description}</p>
+                        <div className="flex gap-2 mt-2">
+                          <Badge variant="secondary">
+                            {club.club_type === 'other' ? club.custom_type : club.club_type}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            Created {new Date(club.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/club/${club.id}`)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditClub(club.id)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="events">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">All Events</h2>
+              <Button onClick={handleCreateEvent}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Event
+                Create Event
               </Button>
             </div>
             
             <div className="grid gap-4">
-              {events.map((event) => (
+              {allEvents.map((event) => (
                 <Card key={event.id}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold">{event.title}</h3>
-                         <p className="text-sm text-muted-foreground">
-                           {new Date(event.event_date).toLocaleDateString()}
-                         </p>
-                         <div className="flex gap-2 items-center">
-                           <Badge variant={(event as any).status === 'active' ? 'default' : 'secondary'}>
-                             {(event as any).status || 'active'}
-                           </Badge>
-                           <span className="text-xs text-muted-foreground">
-                             {event.share_count || 0} shares
-                           </span>
-                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          {(event as any).clubs?.name} • {new Date(event.event_date).toLocaleDateString()}
+                        </p>
+                        <div className="flex gap-2 items-center mt-2">
+                          <Badge variant={event.status === 'active' ? 'default' : 'secondary'}>
+                            {event.status || 'active'}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {event.share_count || 0} shares
+                          </span>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -353,72 +463,22 @@ const ClubDashboard = () => {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="members">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Board Members</h2>
-              <Button onClick={() => navigate(`/club/${clubId}/members/add`)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Member
-              </Button>
-            </div>
-            
-            <div className="grid gap-4">
-              {boardMembers.map((member) => (
-                <Card key={member.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-muted-foreground">{member.position}</p>
-                        <p className="text-sm text-muted-foreground">{member.year_in_college}</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {allEvents.length === 0 && (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <p className="text-muted-foreground">No events created yet</p>
+                    <Button onClick={handleCreateEvent} className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your First Event
+                    </Button>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
           </TabsContent>
 
-          <TabsContent value="achievements">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Achievements</h2>
-              <Button onClick={() => navigate(`/club/${clubId}/achievements/add`)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Achievement
-              </Button>
-            </div>
-            
-            <div className="grid gap-4">
-              {achievements.map((achievement) => (
-                <Card key={achievement.id}>
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold">{achievement.title}</h3>
-                    <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {achievement.date_achieved && new Date(achievement.date_achieved).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="applications">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Club Applications</h2>
-            </div>
-            <p className="text-muted-foreground">Applications functionality coming soon...</p>
-          </TabsContent>
-
-          <TabsContent value="profile" className="space-y-6">
+          <TabsContent value="profile">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* User Profile Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -446,39 +506,36 @@ const ClubDashboard = () => {
                 </CardContent>
               </Card>
 
-              {/* Club Profile Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Club Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Club Name</label>
-                    <p className="text-sm text-muted-foreground">{club?.name}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Club Type</label>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {club?.club_type === 'other' ? club?.custom_type : club?.club_type}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Contact Email</label>
-                    <p className="text-sm text-muted-foreground">{club?.contact_email || 'Not set'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Website</label>
-                    <p className="text-sm text-muted-foreground">{club?.website || 'Not set'}</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="w-full" onClick={handleEditClub}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Club Details
-                  </Button>
-                </CardContent>
-              </Card>
+              {selectedClub && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Selected Club Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Club Name</label>
+                      <p className="text-sm text-muted-foreground">{selectedClub.name}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Club Type</label>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {selectedClub.club_type === 'other' ? selectedClub.custom_type : selectedClub.club_type}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Contact Email</label>
+                      <p className="text-sm text-muted-foreground">{selectedClub.contact_email || 'Not set'}</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => handleEditClub(selectedClub.id)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Club Details
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>

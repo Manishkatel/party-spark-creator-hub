@@ -230,7 +230,7 @@ const Navbar = () => {
               <>
                 {profile?.role === 'club' && (
                   <Link 
-                    to="/club-dashboard" 
+                    to="/club-dashboard"
                     className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >

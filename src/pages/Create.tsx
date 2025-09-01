@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Create = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [clubs, setClubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Get pre-selected club from navigation state
+  const selectedClubId = location.state?.selectedClubId;
 
   useEffect(() => {
     checkAuthAndFetchClubs();
