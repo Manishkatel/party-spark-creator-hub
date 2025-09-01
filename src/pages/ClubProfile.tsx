@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Users, MapPin, Globe, Mail, Phone, Clock, Bell } from "lucide-react";
+import { Calendar, Users, MapPin, Globe, Mail, Phone, Clock, Bell, Edit, Trash2 } from "lucide-react";
 import ClubApplicationForm from "@/components/clubs/ClubApplicationForm";
 import EventReminderDialog from "@/components/clubs/EventReminderDialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClubMember {
   id: string;
@@ -47,82 +49,107 @@ interface Club {
 
 const ClubProfile = () => {
   const { id } = useParams();
-  const [club, setClub] = useState<Club | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [club, setClub] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showReminderDialog, setShowReminderDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null);
-
-  // Mock club data
-  const mockClub: Club = {
-    id: id || "1",
-    name: "USM Computer Science Club",
-    description: "A community of passionate computer science students and professionals dedicated to learning, networking, and innovation.",
-    logo_url: "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=200&h=200&fit=crop&crop=center",
-    website: "https://usm-cs-club.com",
-    email: "contact@usm-cs-club.com",
-    phone: "(601) 266-4949",
-    category: "Academic",
-    totalMembers: 125,
-    objective: "To foster a collaborative environment where students can enhance their programming skills, explore emerging technologies, and build professional networks in the field of computer science.",
-    achievements: [
-      "Winner of 2023 USM Hackathon",
-      "Organized 15+ technical workshops",
-      "100+ students mentored",
-      "Partnership with 5 tech companies",
-      "Published 20+ research papers"
-    ],
-    topMembers: [
-      { id: "1", name: "Sarah Johnson", role: "President", avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b1c0?w=100&h=100&fit=crop", joinDate: "2022-08-15" },
-      { id: "2", name: "Mike Chen", role: "Vice President", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", joinDate: "2022-09-01" },
-      { id: "3", name: "Emily Davis", role: "Secretary", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop", joinDate: "2023-01-20" },
-      { id: "4", name: "Alex Rodriguez", role: "Treasurer", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop", joinDate: "2023-02-10" }
-    ],
-    upcomingEvents: [
-      {
-        id: "1",
-        title: "React Workshop",
-        date: "2024-03-15",
-        time: "2:00 PM",
-        location: "Computer Science Building, Room 101",
-        description: "Learn the fundamentals of React development",
-        attendees: 45
-      },
-      {
-        id: "2",
-        title: "Tech Career Fair Prep",
-        date: "2024-03-22",
-        time: "4:00 PM",
-        location: "Student Union, Conference Room A",
-        description: "Prepare for upcoming career fair with resume reviews and mock interviews",
-        attendees: 32
-      }
-    ],
-    pastEvents: [
-      {
-        id: "3",
-        title: "Python Bootcamp",
-        date: "2024-02-15",
-        time: "10:00 AM",
-        location: "Computer Science Building, Room 205",
-        description: "Intensive Python programming workshop for beginners",
-        attendees: 67
-      },
-      {
-        id: "4",
-        title: "Industry Panel Discussion",
-        date: "2024-01-28",
-        time: "3:00 PM",
-        location: "Student Union, Main Hall",
-        description: "Panel discussion with tech industry professionals",
-        attendees: 89
-      }
-    ]
-  };
+  const [events, setEvents] = useState<any[]>([]);
+  const [boardMembers, setBoardMembers] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
 
   useEffect(() => {
-    // Simulate fetching club data
-    setClub(mockClub);
+    if (id) {
+      checkAuth();
+      fetchClubData();
+    }
   }, [id]);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
+
+  const fetchClubData = async () => {
+    try {
+      // Fetch club details
+      const { data: clubData, error: clubError } = await supabase
+        .from('clubs')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (clubError) {
+        console.error('Error fetching club:', clubError);
+        toast({
+          title: "Error",
+          description: "Club not found",
+          variant: "destructive",
+        });
+        navigate('/clubs');
+        return;
+      }
+
+      setClub(clubData);
+      setIsOwner(user?.id === clubData.owner_id);
+
+      // Fetch related data in parallel
+      const [eventsResult, boardMembersResult, achievementsResult] = await Promise.all([
+        supabase.from('events').select('*').eq('club_id', id),
+        supabase.from('board_members').select('*').eq('club_id', id),
+        supabase.from('achievements').select('*').eq('club_id', id)
+      ]);
+
+      setEvents(eventsResult.data || []);
+      setBoardMembers(boardMembersResult.data || []);
+      setAchievements(achievementsResult.data || []);
+
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load club data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditClub = () => {
+    navigate(`/club/${id}/edit`);
+  };
+
+  const handleDeleteClub = async () => {
+    if (!confirm('Are you sure you want to delete this club? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clubs')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Club deleted successfully",
+      });
+      navigate('/clubs');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete club",
+        variant: "destructive",
+      });
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -138,13 +165,29 @@ const ClubProfile = () => {
     setShowReminderDialog(true);
   };
 
-  if (!club) {
+  if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-2">Loading...</h2>
             <p className="text-muted-foreground">Fetching club information</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!club) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-2">Club Not Found</h2>
+            <p className="text-muted-foreground">The club you're looking for doesn't exist</p>
+            <Button onClick={() => navigate('/clubs')} className="mt-4">
+              Back to Clubs
+            </Button>
           </div>
         </div>
       </Layout>
@@ -165,13 +208,15 @@ const ClubProfile = () => {
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
                   <h1 className="text-3xl font-bold">{club.name}</h1>
-                  <Badge variant="secondary" className="w-fit">{club.category}</Badge>
+                  <Badge variant="secondary" className="w-fit">
+                    {club.club_type === 'other' ? club.custom_type : club.club_type}
+                  </Badge>
                 </div>
                 <p className="text-muted-foreground mb-4">{club.description}</p>
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    <span>{club.totalMembers} members</span>
+                    <span>{boardMembers.length} board members</span>
                   </div>
                   {club.website && (
                     <div className="flex items-center gap-2">
@@ -181,23 +226,38 @@ const ClubProfile = () => {
                       </a>
                     </div>
                   )}
-                  {club.email && (
+                  {club.contact_email && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span>{club.email}</span>
+                      <span>{club.contact_email}</span>
                     </div>
                   )}
-                  {club.phone && (
+                  {club.contact_phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      <span>{club.phone}</span>
+                      <span>{club.contact_phone}</span>
                     </div>
                   )}
                 </div>
               </div>
-              <Button onClick={() => setShowApplicationForm(true)} className="bg-primary hover:bg-primary/90">
-                Join Club
-              </Button>
+              <div className="flex gap-2">
+                {isOwner ? (
+                  <>
+                    <Button onClick={handleEditClub} variant="outline">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Club
+                    </Button>
+                    <Button onClick={handleDeleteClub} variant="destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Club
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => setShowApplicationForm(true)} className="bg-primary hover:bg-primary/90">
+                    Join Club
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -219,18 +279,24 @@ const ClubProfile = () => {
               <CardContent>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Our Objective</h3>
-                    <p className="text-muted-foreground">{club.objective}</p>
+                    <h3 className="text-lg font-semibold mb-2">About Our Club</h3>
+                    <p className="text-muted-foreground">{club.description}</p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">What We Do</h3>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                      <li>Weekly coding workshops and tutorials</li>
-                      <li>Guest lectures from industry professionals</li>
-                      <li>Hackathons and programming competitions</li>
-                      <li>Networking events and career guidance</li>
-                      <li>Open source project collaborations</li>
-                    </ul>
+                    <h3 className="text-lg font-semibold mb-2">Contact Information</h3>
+                    <div className="space-y-2">
+                      {club.contact_email && (
+                        <p className="text-muted-foreground">Email: {club.contact_email}</p>
+                      )}
+                      {club.contact_phone && (
+                        <p className="text-muted-foreground">Phone: {club.contact_phone}</p>
+                      )}
+                      {club.website && (
+                        <p className="text-muted-foreground">
+                          Website: <a href={club.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">{club.website}</a>
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -244,19 +310,27 @@ const ClubProfile = () => {
                   <CardTitle>Leadership Team</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {club.topMembers.map((member) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {boardMembers.map((member) => (
                       <div key={member.id} className="text-center">
                         <Avatar className="w-16 h-16 mx-auto mb-3">
-                          <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarImage src={member.photo_url} alt={member.name} />
+                          <AvatarFallback>{member.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-muted-foreground">{member.role}</p>
-                        <p className="text-xs text-muted-foreground">Joined {formatDate(member.joinDate)}</p>
+                        <p className="text-sm text-muted-foreground">{member.position || 'Member'}</p>
+                        {member.year_in_college && (
+                          <p className="text-xs text-muted-foreground">{member.year_in_college}</p>
+                        )}
+                        {member.joined_date && (
+                          <p className="text-xs text-muted-foreground">Joined {formatDate(member.joined_date)}</p>
+                        )}
                       </div>
                     ))}
                   </div>
+                  {boardMembers.length === 0 && (
+                    <p className="text-center text-muted-foreground">No board members listed yet.</p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -270,7 +344,7 @@ const ClubProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {club.upcomingEvents.map((event) => (
+                    {events.filter(event => new Date(event.event_date) > new Date()).map((event) => (
                       <div key={event.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-lg">{event.title}</h3>
@@ -288,23 +362,18 @@ const ClubProfile = () => {
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>{formatDate(event.date)}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>{event.time}</span>
+                            <span>{formatDate(event.event_date)}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
                             <span>{event.location}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
-                            <span>{event.attendees} attending</span>
-                          </div>
                         </div>
                       </div>
                     ))}
+                    {events.filter(event => new Date(event.event_date) > new Date()).length === 0 && (
+                      <p className="text-center text-muted-foreground">No upcoming events scheduled.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -315,30 +384,25 @@ const ClubProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {club.pastEvents.map((event) => (
+                    {events.filter(event => new Date(event.event_date) <= new Date()).map((event) => (
                       <div key={event.id} className="border rounded-lg p-4 opacity-75">
                         <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
                         <p className="text-muted-foreground mb-3">{event.description}</p>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>{formatDate(event.date)}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>{event.time}</span>
+                            <span>{formatDate(event.event_date)}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
                             <span>{event.location}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
-                            <span>{event.attendees} attended</span>
-                          </div>
                         </div>
                       </div>
                     ))}
+                    {events.filter(event => new Date(event.event_date) <= new Date()).length === 0 && (
+                      <p className="text-center text-muted-foreground">No past events.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -350,16 +414,27 @@ const ClubProfile = () => {
               <CardHeader>
                 <CardTitle>Our Achievements</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
-                  {club.achievements.map((achievement, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                      <span>{achievement}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
+                <CardContent>
+                  <div className="grid gap-3">
+                    {achievements.map((achievement) => (
+                      <div key={achievement.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <div>
+                          <span className="font-medium">{achievement.title}</span>
+                          {achievement.description && (
+                            <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                          )}
+                          {achievement.date_achieved && (
+                            <p className="text-xs text-muted-foreground">{formatDate(achievement.date_achieved)}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {achievements.length === 0 && (
+                      <p className="text-center text-muted-foreground">No achievements recorded yet.</p>
+                    )}
+                  </div>
+                </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
