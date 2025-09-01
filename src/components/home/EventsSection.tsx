@@ -1,10 +1,26 @@
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, MapPin, Users, Clock, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import EventDetailsDialog from "@/components/events/EventDetailsDialog";
 
-// Mock events data
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  club: string;
+  attendees: number;
+  price: number;
+  category: string;
+  additional_info?: string;
+}
+
+// Mock events data as fallback
 const mockEvents = [
   {
     id: "1",
@@ -53,6 +69,50 @@ const mockEvents = [
 ];
 
 const EventsSection = () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data: eventsData, error } = await supabase
+        .from('events')
+        .select('*, clubs(name)')
+        .order('event_date', { ascending: true })
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        setEvents(mockEvents);
+      } else {
+        const transformedEvents = eventsData?.map(event => ({
+          id: event.id,
+          title: event.title,
+          description: event.description || '',
+          date: event.event_date,
+          location: event.location || '',
+          club: (event as any).clubs?.name || 'Unknown Club',
+          attendees: Math.floor(Math.random() * 300), // Mock data for now
+          price: event.price || 0,
+          category: 'Academic', // Default category for now
+          additional_info: event.additional_info || ''
+        })) || [];
+        
+        const allEvents = [...transformedEvents, ...mockEvents];
+        setEvents(allEvents.slice(0, 4)); // Show only first 4 events
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setEvents(mockEvents);
+    } finally {
+      setLoading(false);
+    }
+  };
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -74,6 +134,26 @@ const EventsSection = () => {
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const handleViewDetails = (event: Event) => {
+    setSelectedEvent(event);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedEvent(null);
+    setIsDetailsOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">Loading events...</div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,7 +165,7 @@ const EventsSection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {mockEvents.map((event) => (
+          {events.map((event) => (
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -130,8 +210,9 @@ const EventsSection = () => {
                 </div>
 
                 <div className="mt-4 flex justify-between items-center">
-                  <Button variant="outline" size="sm">
-                    Learn More
+                  <Button variant="outline" size="sm" onClick={() => handleViewDetails(event)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
                   </Button>
                   <Button size="sm">
                     Join Event
@@ -150,6 +231,12 @@ const EventsSection = () => {
           </Link>
         </div>
       </div>
+      
+      <EventDetailsDialog 
+        event={selectedEvent}
+        isOpen={isDetailsOpen}
+        onClose={handleCloseDetails}
+      />
     </section>
   );
 };
