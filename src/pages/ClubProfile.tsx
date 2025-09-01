@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -61,6 +62,7 @@ const ClubProfile = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [boardMembers, setBoardMembers] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
+  const [hasJoined, setHasJoined] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -72,6 +74,18 @@ const ClubProfile = () => {
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+    
+    // Check if user has already joined this club
+    if (user && id) {
+      const { data } = await supabase
+        .from('club_members')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('club_id', id)
+        .single();
+      
+      setHasJoined(!!data);
+    }
   };
 
   const fetchClubData = async () => {
@@ -125,10 +139,6 @@ const ClubProfile = () => {
   };
 
   const handleDeleteClub = async () => {
-    if (!confirm('Are you sure you want to delete this club? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('clubs')
@@ -146,6 +156,75 @@ const ClubProfile = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to delete club",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleJoinClub = async () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to join a club",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('club_members')
+        .insert({
+          user_id: user.id,
+          club_id: id
+        });
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          toast({
+            title: "Already Joined",
+            description: "You've already joined this club",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      setHasJoined(true);
+      toast({
+        title: "Success",
+        description: `You've joined ${club.name}!`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to join club",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLeaveClub = async () => {
+    try {
+      const { error } = await supabase
+        .from('club_members')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('club_id', id);
+
+      if (error) throw error;
+
+      setHasJoined(false);
+      toast({
+        title: "Left Club",
+        description: `You've left ${club.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to leave club",
         variant: "destructive",
       });
     }
@@ -247,15 +326,77 @@ const ClubProfile = () => {
                       <Edit className="w-4 h-4 mr-2" />
                       Edit Club
                     </Button>
-                    <Button onClick={handleDeleteClub} variant="destructive">
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete Club
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Club
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Club</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{club.name}"? This action cannot be undone and will remove all associated events, members, and data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteClub}>
+                            Delete Club
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </>
                 ) : (
-                  <Button onClick={() => setShowApplicationForm(true)} className="bg-primary hover:bg-primary/90">
-                    Join Club
-                  </Button>
+                  <>
+                    {!hasJoined ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button className="bg-primary hover:bg-primary/90">
+                            Join Club
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Join Club</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to join "{club.name}"? You'll become a member and receive updates about club activities.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleJoinClub}>
+                              Join Club
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline">
+                            Leave Club
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Leave Club</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to leave "{club.name}"? You'll no longer be a member and won't receive club updates.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLeaveClub}>
+                              Leave Club
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </>
                 )}
               </div>
             </div>

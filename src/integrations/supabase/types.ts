@@ -137,6 +137,27 @@ export type Database = {
           },
         ]
       }
+      club_members: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clubs: {
         Row: {
           club_type: Database["public"]["Enums"]["club_type"] | null
@@ -179,6 +200,27 @@ export type Database = {
           owner_id?: string
           updated_at?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      event_attendees: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, Share, DollarSign, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Event {
   id: string;
@@ -28,6 +29,29 @@ interface EventDetailsDialogProps {
 const EventDetailsDialog = ({ event, isOpen, onClose }: EventDetailsDialogProps) => {
   const { toast } = useToast();
   const [isJoined, setIsJoined] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    checkAuthAndMembership();
+  }, [event, isOpen]);
+
+  const checkAuthAndMembership = async () => {
+    if (!event) return;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+    
+    if (user) {
+      const { data } = await supabase
+        .from('event_attendees')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('event_id', event.id)
+        .single();
+      
+      setIsJoined(!!data);
+    }
+  };
 
   if (!event) return null;
 
@@ -81,20 +105,73 @@ const EventDetailsDialog = ({ event, isOpen, onClose }: EventDetailsDialogProps)
     }
   };
 
-  const handleJoinEvent = () => {
-    setIsJoined(true);
-    toast({
-      title: "Successfully Joined!",
-      description: `You've joined "${event.title}"`,
-    });
+  const handleJoinEvent = async () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to join an event",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('event_attendees')
+        .insert({
+          user_id: user.id,
+          event_id: event.id
+        });
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          toast({
+            title: "Already Joined",
+            description: "You've already joined this event",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      setIsJoined(true);
+      toast({
+        title: "Successfully Joined!",
+        description: `You've joined "${event.title}"`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to join event",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleLeaveEvent = () => {
-    setIsJoined(false);
-    toast({
-      title: "Left Event",
-      description: `You've left "${event.title}"`,
-    });
+  const handleLeaveEvent = async () => {
+    try {
+      const { error } = await supabase
+        .from('event_attendees')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('event_id', event.id);
+
+      if (error) throw error;
+
+      setIsJoined(false);
+      toast({
+        title: "Left Event",
+        description: `You've left "${event.title}"`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to leave event",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
