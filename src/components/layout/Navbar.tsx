@@ -134,23 +134,24 @@ const Navbar = () => {
               {user && (
                 <>
                   {profile?.role === 'club' && (
+                    <Link to="/club-dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                      Dashboard
+                    </Link>
+                  )}
+                  {profile?.role !== 'club' && (
                     <>
-                      <Link to="/club-dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                        Dashboard
-                      </Link>
                       <Link to="/create" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                         Create Event
                       </Link>
+                      <Link to="/my-events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                        My Events
+                      </Link>
                     </>
                   )}
-                  <Link to="/my-events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                    My Events
-                  </Link>
                 </>
               )}
               {user ? (
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">{user.email}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -228,14 +229,16 @@ const Navbar = () => {
             {user && (
               <>
                 {profile?.role === 'club' && (
+                  <Link 
+                    to="/club-dashboard" 
+                    className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                {profile?.role !== 'club' && (
                   <>
-                    <Link 
-                      to="/club-dashboard" 
-                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
                     <Link 
                       to="/create" 
                       className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
@@ -243,17 +246,16 @@ const Navbar = () => {
                     >
                       Create Event
                     </Link>
+                    <Link 
+                      to="/my-events" 
+                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Events
+                    </Link>
                   </>
                 )}
-                <Link 
-                  to="/my-events" 
-                  className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  My Events
-                </Link>
                 <div className="px-3 py-2 text-sm text-muted-foreground border-t flex items-center justify-between">
-                  <span>{user.email}</span>
                   <Button
                     variant="ghost"
                     size="sm"

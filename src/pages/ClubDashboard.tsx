@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Users, Calendar, Award, Settings } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Award, Settings, User, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -236,13 +236,71 @@ const ClubDashboard = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="events" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="members">Board Members</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    onClick={() => navigate('/create')} 
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New Event
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/my-events')} 
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    View My Events
+                  </Button>
+                  <Button 
+                    onClick={handleEditClub} 
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Club Details
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>• {stats.activeEvents} active events</p>
+                    <p>• {stats.applications} pending applications</p>
+                    <p>• {stats.members} board members</p>
+                    <p>• {stats.achievements} achievements recorded</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           <TabsContent value="events" className="space-y-6">
             <div className="flex items-center justify-between">
@@ -353,6 +411,72 @@ const ClubDashboard = () => {
               <h2 className="text-xl font-semibold">Club Applications</h2>
             </div>
             <p className="text-muted-foreground">Applications functionality coming soon...</p>
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* User Profile Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    User Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email</label>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Full Name</label>
+                    <p className="text-sm text-muted-foreground">{user?.full_name || 'Not set'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Role</label>
+                    <p className="text-sm text-muted-foreground capitalize">{user?.role}</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Club Profile Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Club Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Club Name</label>
+                    <p className="text-sm text-muted-foreground">{club?.name}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Club Type</label>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {club?.club_type === 'other' ? club?.custom_type : club?.club_type}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Contact Email</label>
+                    <p className="text-sm text-muted-foreground">{club?.contact_email || 'Not set'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Website</label>
+                    <p className="text-sm text-muted-foreground">{club?.website || 'Not set'}</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full" onClick={handleEditClub}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Club Details
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
