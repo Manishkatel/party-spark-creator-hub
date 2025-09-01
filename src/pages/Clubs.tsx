@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Users, Calendar, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Club {
   id: string;
@@ -91,24 +93,62 @@ const Clubs = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
-  
   const [sortBy, setSortBy] = useState<string>("Rating");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user from localStorage
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-
-    // Simulate loading clubs
-    setTimeout(() => {
-      setClubs(mockClubs);
-      setLoading(false);
-    }, 1000);
+    checkAuth();
+    fetchClubs();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setUser(user);
+      
+      // Fetch user profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      setProfile(profileData);
+    }
+  };
+
+  const fetchClubs = async () => {
+    try {
+      const { data: clubsData, error } = await supabase
+        .from('clubs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching clubs:', error);
+        // Fall back to mock data if there's an error
+        setClubs(mockClubs);
+      } else {
+        // Transform data to match Club interface
+        const transformedClubs = clubsData?.map(club => ({
+          ...club,
+          category: club.club_type === 'other' ? (club.custom_type || 'Other') : club.club_type,
+          members: 0, // You can add a query to count members later
+          upcomingEvents: 0 // You can add a query to count upcoming events later
+        })) || [];
+        
+        setClubs([...transformedClubs, ...mockClubs]);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setClubs(mockClubs);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -156,10 +196,31 @@ const Clubs = () => {
               Discover clubs and organizations creating amazing events
             </p>
           </div>
-          {user && (
-            <Button onClick={() => window.location.href = "/club/create"}>
+          {user && profile?.role === 'club' && (
+            <Button onClick={() => navigate("/club/create")}>
               <Plus className="w-4 h-4 mr-2" />
               Create Club
+            </Button>
+          )}
+          {user && profile?.role !== 'club' && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                toast({
+                  title: "Access Restricted",
+                  description: "Only club accounts can create clubs. Please sign in with a club account.",
+                  variant: "destructive",
+                });
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Club
+            </Button>
+          )}
+          {!user && (
+            <Button onClick={() => navigate("/auth")}>
+              <Plus className="w-4 h-4 mr-2" />
+              Sign In to Create Club
             </Button>
           )}
         </div>
@@ -204,10 +265,16 @@ const Clubs = () => {
               <p className="text-muted-foreground mb-4">
                 Be the first to create a club and start organizing events!
               </p>
-              {user && (
-                <Button onClick={() => window.location.href = "/club/create"}>
+              {user && profile?.role === 'club' && (
+                <Button onClick={() => navigate("/club/create")}>
                   <Plus className="w-4 h-4 mr-2" />
                   Create First Club
+                </Button>
+              )}
+              {!user && (
+                <Button onClick={() => navigate("/auth")}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Sign In to Create Club
                 </Button>
               )}
             </CardContent>
@@ -257,7 +324,7 @@ const Clubs = () => {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => window.location.href = `/club/${club.id}`}
+                      onClick={() => navigate(`/club/${club.id}`)}
                       className="w-full"
                     >
                       <Calendar className="w-4 h-4 mr-2" />
