@@ -177,26 +177,6 @@ const ClubDashboard = () => {
     );
   }
 
-  if (!clubs.length) {
-    return (
-      <Layout>
-        <div className="max-w-6xl mx-auto pt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome to Your Club Dashboard</CardTitle>
-              <CardDescription>You haven't created any clubs yet. Get started by creating your first club!</CardDescription>
-            </CardHeader>
-            <CardContent className="text-center py-12">
-              <Button onClick={() => navigate('/club/create')} size="lg">
-                <Plus className="h-5 w-5 mr-2" />
-                Create Your First Club
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
