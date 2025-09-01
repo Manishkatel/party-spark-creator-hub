@@ -31,7 +31,7 @@ const ClubDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (user && clubId) {
+    if (user) {
       fetchClubData();
     }
   }, [user, clubId]);
@@ -65,20 +65,23 @@ const ClubDashboard = () => {
   const fetchClubData = async () => {
     setLoading(true);
     
-    // If no clubId, fetch the user's club
+    // If no clubId, fetch the user's clubs and use the most recent one
     let queryClubId = clubId;
     if (!clubId) {
-      const { data: userClub } = await supabase
+      const { data: userClubs } = await supabase
         .from('clubs')
         .select('id')
         .eq('owner_id', user.id)
-        .single();
+        .order('created_at', { ascending: false });
       
-      if (!userClub) {
+      if (!userClubs || userClubs.length === 0) {
         navigate('/club/create');
         return;
       }
-      queryClubId = userClub.id;
+      queryClubId = userClubs[0].id;
+      // Update URL to include the club ID
+      navigate(`/club/${queryClubId}/dashboard`, { replace: true });
+      return;
     }
     
     // Fetch club details

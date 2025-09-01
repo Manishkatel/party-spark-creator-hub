@@ -134,7 +134,7 @@ const Navbar = () => {
               {user && (
                 <>
                   {profile?.role === 'club' && (
-                    <Link to="/club-dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                      <Link to="/club-dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                       Dashboard
                     </Link>
                   )}
