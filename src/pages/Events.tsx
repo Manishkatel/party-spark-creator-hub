@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Users, Filter, Share } from "lucide-react";
+import { Calendar, MapPin, Users, Filter, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import EventDetailsDialog from "@/components/events/EventDetailsDialog";
 
 interface Event {
   id: string;
@@ -18,6 +19,7 @@ interface Event {
   attendees: number;
   price: number;
   category: string;
+  additional_info?: string;
 }
 
 // Mock events data - in a real app this would come from API
@@ -96,6 +98,8 @@ const Events = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [priceFilter, setPriceFilter] = useState<string>("All");
   const [sortBy, setSortBy] = useState<string>("Date");
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,7 +128,8 @@ const Events = () => {
           club: (event as any).clubs?.name || 'Unknown Club',
           attendees: Math.floor(Math.random() * 300), // Mock data for now
           price: event.price || 0,
-          category: 'Academic' // Default category for now
+          category: 'Academic', // Default category for now
+          additional_info: event.additional_info || ''
         })) || [];
         setEvents([...transformedEvents, ...allMockEvents]);
       }
@@ -159,25 +164,14 @@ const Events = () => {
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleShareEvent = async (event: Event) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: event.title,
-          text: `Check out this event: ${event.title} by ${event.club}`,
-          url: window.location.href,
-        });
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(`${event.title} by ${event.club} - ${window.location.href}`);
-      toast({
-        title: "Link copied!",
-        description: "Event link has been copied to clipboard",
-      });
-    }
+  const handleViewDetails = (event: Event) => {
+    setSelectedEvent(event);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedEvent(null);
+    setIsDetailsOpen(false);
   };
 
   const filteredAndSortedEvents = events
@@ -308,9 +302,9 @@ const Events = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleShareEvent(event)}>
-                    <Share className="h-4 w-4 mr-1" />
-                    Share
+                  <Button variant="outline" size="sm" onClick={() => handleViewDetails(event)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
                   </Button>
                   <Button size="sm" className="flex-1" onClick={() => {
                     toast({
@@ -326,6 +320,12 @@ const Events = () => {
           ))}
         </div>
       </div>
+      
+      <EventDetailsDialog 
+        event={selectedEvent}
+        isOpen={isDetailsOpen}
+        onClose={handleCloseDetails}
+      />
     </Layout>
   );
 };

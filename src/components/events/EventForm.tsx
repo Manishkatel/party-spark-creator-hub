@@ -174,14 +174,14 @@ const EventForm = ({ clubs, user }: EventFormProps) => {
             </div>
             
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Short Description</Label>
               <Textarea
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Join us for a fun summer BBQ with games, food, and more!"
-                className="mt-1 min-h-32"
+                placeholder="A brief summary of your event..."
+                className="mt-1 min-h-24"
               />
             </div>
             
@@ -304,13 +304,13 @@ const EventForm = ({ clubs, user }: EventFormProps) => {
         {step === 3 && (
           <div className="space-y-4 animate-fade-in">
             <div>
-              <Label htmlFor="additional_info">Additional Information</Label>
+              <Label htmlFor="additional_info">Detailed Description</Label>
               <Textarea
                 id="additional_info"
                 name="additional_info"
                 value={formData.additional_info}
                 onChange={handleChange}
-                placeholder="Any additional details about the event..."
+                placeholder="Provide detailed information about the event, including agenda, requirements, what to expect, etc..."
                 className="mt-1 min-h-32"
               />
             </div>
