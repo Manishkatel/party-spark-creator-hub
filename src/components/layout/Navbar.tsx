@@ -20,9 +20,10 @@ const Navbar = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -37,8 +38,9 @@ const Navbar = () => {
       }
     );
 
-    // Check for existing session
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Existing session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -149,7 +151,8 @@ const Navbar = () => {
                   )}
                 </>
               )}
-              {user ? (
+              {/* Always show the user section if we're not on /auth page */}
+              {(user || window.location.pathname !== '/auth') && (
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="ghost"
@@ -163,65 +166,54 @@ const Navbar = () => {
                       <Moon className="w-4 h-4" />
                     )}
                   </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-sm">
-                            {profile?.full_name ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <div className="flex items-center justify-start gap-2 p-2">
-                        <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{profile?.full_name || 'User'}</p>
-                          <p className="w-[200px] truncate text-sm text-muted-foreground">
-                            {profile?.email}
-                          </p>
+                  
+                  {user ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="text-sm">
+                              {profile?.full_name ? profile.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <div className="flex items-center justify-start gap-2 p-2">
+                          <div className="flex flex-col space-y-1 leading-none">
+                            <p className="font-medium">{profile?.full_name || 'User'}</p>
+                            <p className="w-[200px] truncate text-sm text-muted-foreground">
+                              {profile?.email || user?.email || 'No email'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to={profile?.role === 'club' ? '/club-profile' : '/profile'} className="cursor-pointer">
-                          <UserIcon className="mr-2 h-4 w-4" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      {profile?.role === 'club' && (
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                          <Link to="/club-dashboard" className="cursor-pointer">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Dashboard
+                          <Link to={profile?.role === 'club' ? '/club-profile' : '/profile'} className="cursor-pointer">
+                            <UserIcon className="mr-2 h-4 w-4" />
+                            Profile
                           </Link>
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Sign Out
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="p-2"
-                  >
-                    {theme === "dark" ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Button variant="default" asChild>
-                    <Link to="/auth">Sign In</Link>
-                  </Button>
+                        {profile?.role === 'club' && (
+                          <DropdownMenuItem asChild>
+                            <Link to="/club-dashboard" className="cursor-pointer">
+                              <Settings className="mr-2 h-4 w-4" />
+                              Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Sign Out
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <Button variant="default" asChild>
+                      <Link to="/auth">Sign In</Link>
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
