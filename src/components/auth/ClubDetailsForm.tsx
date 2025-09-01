@@ -7,16 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ProfilePictureUpload } from "./ProfilePictureUpload";
 
 const clubTypes = [
-  "Academic",
-  "Sports",
-  "Arts & Culture", 
-  "Technology",
-  "Business",
-  "Community Service",
-  "Religious",
-  "Professional",
-  "Special Interest",
-  "Other"
+  { value: "academic", label: "Academic" },
+  { value: "sports", label: "Sports" },
+  { value: "cultural", label: "Cultural" },
+  { value: "technical", label: "Technical" },
+  { value: "social", label: "Social" },
+  { value: "professional", label: "Professional" },
+  { value: "other", label: "Other" }
 ];
 
 interface ClubDetailsFormProps {
@@ -107,8 +104,8 @@ export const ClubDetailsForm = ({
               </SelectTrigger>
               <SelectContent>
                 {clubTypes.map((type) => (
-                  <SelectItem key={type} value={type.toLowerCase().replace(/\s+/g, '_')}>
-                    {type}
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
                   </SelectItem>
                 ))}
               </SelectContent>

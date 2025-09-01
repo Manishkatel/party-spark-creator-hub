@@ -12,6 +12,7 @@ import Events from "./pages/Events";
 import Auth from "./pages/Auth";
 import Clubs from "./pages/Clubs";
 import ClubCreate from "./pages/ClubCreate";
+import ClubCreateMultiStep from "./pages/ClubCreateMultiStep";
 import ClubDashboard from "./pages/ClubDashboard";
 import ClubEdit from "./pages/ClubEdit";
 import EventEdit from "./pages/EventEdit";
@@ -39,7 +40,8 @@ const App = () => (
             <Route path="/my-events" element={<MyEvents />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/clubs" element={<Clubs />} />
-            <Route path="/club/create" element={<ClubCreate />} />
+            <Route path="/club/create" element={<ClubCreateMultiStep />} />
+            <Route path="/club-dashboard" element={<ClubDashboard />} />
             <Route path="/club/:clubId/dashboard" element={<ClubDashboard />} />
             <Route path="/club/:clubId/edit" element={<ClubEdit />} />
             <Route path="/event/:eventId/edit" element={<EventEdit />} />
