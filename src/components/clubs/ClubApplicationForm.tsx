@@ -12,7 +12,8 @@ import { Upload, X } from "lucide-react";
 interface Club {
   id: string;
   name: string;
-  category: string;
+  club_type?: string;
+  category?: string;
 }
 
 interface ClubApplicationFormProps {
@@ -22,6 +23,8 @@ interface ClubApplicationFormProps {
 }
 
 const ClubApplicationForm = ({ club, isOpen, onClose }: ClubApplicationFormProps) => {
+  console.log('ClubApplicationForm - club prop:', club);
+  console.log('ClubApplicationForm - club.category:', club?.category);
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -115,7 +118,7 @@ const ClubApplicationForm = ({ club, isOpen, onClose }: ClubApplicationFormProps
         <DialogHeader>
           <DialogTitle>Join {club.name}</DialogTitle>
           <DialogDescription>
-            Fill out this application form to join our {club.category?.toLowerCase() || ''} club. All fields are required unless marked optional.
+            Fill out this application form to join our {(club.club_type || club.category || 'club').toLowerCase()} club. All fields are required unless marked optional.
           </DialogDescription>
         </DialogHeader>
 
