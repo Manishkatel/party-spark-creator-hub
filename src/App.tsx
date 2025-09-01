@@ -17,6 +17,8 @@ import ClubDashboard from "./pages/ClubDashboard";
 import ClubEdit from "./pages/ClubEdit";
 import EventEdit from "./pages/EventEdit";
 import ClubProfile from "./pages/ClubProfile";
+import RegularUserProfile from "./pages/RegularUserProfile";
+import ClubUserProfile from "./pages/ClubUserProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,8 @@ const App = () => (
             <Route path="/club/:clubId/edit" element={<ClubEdit />} />
             <Route path="/event/:eventId/edit" element={<EventEdit />} />
             <Route path="/club/:id" element={<ClubProfile />} />
+            <Route path="/profile" element={<RegularUserProfile />} />
+            <Route path="/club-profile" element={<ClubUserProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

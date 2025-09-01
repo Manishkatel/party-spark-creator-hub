@@ -134,8 +134,8 @@ const Navbar = () => {
               {user && (
                 <>
                   {profile?.role === 'club' && (
-                      <Link to="/club-dashboard" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                      Dashboard
+                      <Link to="/club-profile" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                      Profile
                     </Link>
                   )}
                   {profile?.role !== 'club' && (
@@ -145,6 +145,9 @@ const Navbar = () => {
                       </Link>
                       <Link to="/my-events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
                         My Events
+                      </Link>
+                      <Link to="/profile" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
+                        Profile
                       </Link>
                     </>
                   )}
@@ -230,11 +233,11 @@ const Navbar = () => {
               <>
                 {profile?.role === 'club' && (
                   <Link 
-                    to="/club-dashboard"
+                    to="/club-profile"
                     className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Dashboard
+                    Profile
                   </Link>
                 )}
                 {profile?.role !== 'club' && (
@@ -252,6 +255,13 @@ const Navbar = () => {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       My Events
+                    </Link>
+                    <Link 
+                      to="/profile" 
+                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
                     </Link>
                   </>
                 )}
