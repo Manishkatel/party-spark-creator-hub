@@ -97,7 +97,7 @@ const EventDetailsDialog = ({ event, isOpen, onClose }: EventDetailsDialogProps)
             variant="ghost" 
             size="sm" 
             onClick={handleShareEvent}
-            className="shrink-0"
+            className="shrink-0 mr-8"
           >
             <Share className="h-4 w-4 mr-2" />
             Share
