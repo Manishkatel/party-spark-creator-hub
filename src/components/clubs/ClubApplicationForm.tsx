@@ -115,7 +115,7 @@ const ClubApplicationForm = ({ club, isOpen, onClose }: ClubApplicationFormProps
         <DialogHeader>
           <DialogTitle>Join {club.name}</DialogTitle>
           <DialogDescription>
-            Fill out this application form to join our {club.category.toLowerCase()} club. All fields are required unless marked optional.
+            Fill out this application form to join our {club.category?.toLowerCase() || ''} club. All fields are required unless marked optional.
           </DialogDescription>
         </DialogHeader>
 
