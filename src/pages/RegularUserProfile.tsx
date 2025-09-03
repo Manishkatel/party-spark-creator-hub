@@ -25,7 +25,14 @@ const RegularUserProfile = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [editedProfile, setEditedProfile] = useState({ full_name: "", email: "" });
+  const [editedProfile, setEditedProfile] = useState({ 
+    full_name: "", 
+    email: "", 
+    phone: "", 
+    bio: "", 
+    location: "", 
+    interests: "" 
+  });
 
   useEffect(() => {
     checkAuth();
@@ -64,7 +71,11 @@ const RegularUserProfile = () => {
     setProfile(profileData);
     setEditedProfile({
       full_name: profileData.full_name || "",
-      email: profileData.email || ""
+      email: profileData.email || "",
+      phone: profileData.phone || "",
+      bio: profileData.bio || "",
+      location: profileData.location || "",
+      interests: profileData.interests || ""
     });
   };
 
@@ -144,7 +155,11 @@ const RegularUserProfile = () => {
         .from('profiles')
         .update({
           full_name: editedProfile.full_name,
-          email: editedProfile.email
+          email: editedProfile.email,
+          phone: editedProfile.phone,
+          bio: editedProfile.bio,
+          location: editedProfile.location,
+          interests: editedProfile.interests
         })
         .eq('user_id', user.id);
 
@@ -153,7 +168,11 @@ const RegularUserProfile = () => {
       setProfile({
         ...profile,
         full_name: editedProfile.full_name,
-        email: editedProfile.email
+        email: editedProfile.email,
+        phone: editedProfile.phone,
+        bio: editedProfile.bio,
+        location: editedProfile.location,
+        interests: editedProfile.interests
       });
       setEditMode(false);
       
@@ -295,13 +314,31 @@ const RegularUserProfile = () => {
               <CardContent className="space-y-4">
                 {!editMode ? (
                   <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">Full Name</Label>
-                      <p className="text-sm text-muted-foreground">{profile?.full_name || 'Not provided'}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Full Name</Label>
+                        <p className="text-sm text-muted-foreground">{profile?.full_name || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Email</Label>
+                        <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Phone</Label>
+                        <p className="text-sm text-muted-foreground">{profile?.phone || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Location</Label>
+                        <p className="text-sm text-muted-foreground">{profile?.location || 'Not provided'}</p>
+                      </div>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium">Email</Label>
-                      <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                      <Label className="text-sm font-medium">Bio</Label>
+                      <p className="text-sm text-muted-foreground">{profile?.bio || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Interests</Label>
+                      <p className="text-sm text-muted-foreground">{profile?.interests || 'Not provided'}</p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Account Type</Label>
@@ -314,21 +351,58 @@ const RegularUserProfile = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <Input
+                          id="fullName"
+                          value={editedProfile.full_name}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, full_name: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={editedProfile.email}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={editedProfile.phone}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, phone: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          value={editedProfile.location}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                        />
+                      </div>
+                    </div>
                     <div>
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="bio">Bio</Label>
                       <Input
-                        id="fullName"
-                        value={editedProfile.full_name}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, full_name: e.target.value })}
+                        id="bio"
+                        value={editedProfile.bio}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                        placeholder="Tell us about yourself..."
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="interests">Interests</Label>
                       <Input
-                        id="email"
-                        type="email"
-                        value={editedProfile.email}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                        id="interests"
+                        value={editedProfile.interests}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, interests: e.target.value })}
+                        placeholder="e.g., Sports, Music, Technology..."
                       />
                     </div>
                     <div className="flex gap-2">

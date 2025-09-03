@@ -137,20 +137,7 @@ const Navbar = () => {
                 <Users className="w-4 h-4 mr-1" />
                 Clubs
               </Link>
-              {user && (
-                <>
-                  {profile?.role !== 'club' && (
-                    <>
-                      <Link to="/create" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                        Create Event
-                      </Link>
-                      <Link to="/my-events" className="text-foreground/80 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium">
-                        My Events
-                      </Link>
-                    </>
-                  )}
-                </>
-              )}
+              {/* User menu items removed */}
               {/* Always show the user section if we're not on /auth page */}
               {(user || window.location.pathname !== '/auth') && (
                 <div className="flex items-center space-x-2">
@@ -194,14 +181,7 @@ const Navbar = () => {
                             Profile
                           </Link>
                         </DropdownMenuItem>
-                        {profile?.role === 'club' && (
-                          <DropdownMenuItem asChild>
-                            <Link to="/club-dashboard" className="cursor-pointer">
-                              <Settings className="mr-2 h-4 w-4" />
-                              Dashboard
-                            </Link>
-                          </DropdownMenuItem>
-                        )}
+                        {/* Dashboard removed */}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                           <LogOut className="mr-2 h-4 w-4" />
@@ -256,24 +236,7 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                {profile?.role !== 'club' && (
-                  <>
-                    <Link 
-                      to="/create" 
-                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Create Event
-                    </Link>
-                    <Link 
-                      to="/my-events" 
-                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      My Events
-                    </Link>
-                  </>
-                )}
+                {/* Mobile user menu items removed */}
                 <div className="border-t pt-2">
                   <Link 
                     to={profile?.role === 'club' ? '/club-profile' : '/profile'}
@@ -283,16 +246,7 @@ const Navbar = () => {
                     <UserIcon className="w-4 h-4 mr-2" />
                     Profile
                   </Link>
-                  {profile?.role === 'club' && (
-                    <Link 
-                      to="/club-dashboard"
-                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium flex items-center"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </Link>
-                  )}
+                  {/* Dashboard removed */}
                 </div>
                 <div className="border-t pt-2">
                   <Button
