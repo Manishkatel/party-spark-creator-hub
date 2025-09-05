@@ -338,6 +338,13 @@ const ClubDashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => navigate(`/events/${event.id}`)}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEditEvent(event.id)}
                       >
                         <Edit className="h-4 w-4" />

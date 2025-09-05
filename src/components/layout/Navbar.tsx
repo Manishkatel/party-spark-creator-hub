@@ -181,7 +181,14 @@ const Navbar = () => {
                             Profile
                           </Link>
                         </DropdownMenuItem>
-                        {/* Dashboard removed */}
+                        {profile?.role === 'club' && (
+                          <DropdownMenuItem asChild>
+                            <Link to="/club-dashboard" className="cursor-pointer">
+                              <Settings className="mr-2 h-4 w-4" />
+                              Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                           <LogOut className="mr-2 h-4 w-4" />
@@ -246,7 +253,16 @@ const Navbar = () => {
                     <UserIcon className="w-4 h-4 mr-2" />
                     Profile
                   </Link>
-                  {/* Dashboard removed */}
+                  {profile?.role === 'club' && (
+                    <Link 
+                      to="/club-dashboard"
+                      className="text-foreground hover:bg-primary/10 block px-3 py-2 rounded-md text-base font-medium flex items-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  )}
                 </div>
                 <div className="border-t pt-2">
                   <Button
