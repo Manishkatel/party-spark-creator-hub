@@ -1,0 +1,156 @@
+It's a website that let's clubs in university a platform to show them and create events...and welcome members in the club...as regular users can join the club...there are two types of users...that are regular users and club users...and club users can create multiple club and then can create events choosing particular club among the clubs he has...
+
+So the website starts with:
+Sigining up or sigining in if the user already has account:
+For sigining up: 
+
+User needs to provide: 
+Full Name: 
+Email: 
+Password1:
+Password2: Confirmation password
+User choices: Regular_User(who can join events and clubs and discover them, Club_User(One who can create and manage events of the club)
+
+If Password1 == Password 2 and if regular user: 
+
+Profile_PIC: (image) (optional)
+
+Year in College: (Freshmen,Sophomore, Junior, Senior, Other-the user can put themselves on what they are like professors or workers in Uni)
+
+Interests Choices: [Academic, Sports, Workshops, Technology, Arts & Culture, Photography, Science, Leadership, Networking, Social Events, Music, Business, Community Service, Career Development, Research, All types(select all) ]
+
+If club user: (Only ask this much during signin...club creator can later add members and achievements) 
+
+Club Logo: (Image) (Optional)
+Club_Name : Character (max=100)
+Short Description: Char ( max = 300)
+Club type: [ Academic, Sports, Technical,Cultural, Professional, Social, Other(let user write)]
+Contact Email_Club : 
+Contact_EMAIL_CLUB: 
+CONTACT_PHONE_CLUB:
+WEBSITE_LINK_CLUB:
+
+And there is a sigout option as well which signs out....
+ 
+
+
+Profile System:
+There is a create club button, and create club button...which can only be accessed by club_user. it is displayed but can only be accessed by club user.
+
+There is a profile system: where user can edit full name and email.
+It also shows account type
+It also shows the number of clubs, created by that particular club_user, that are there currently available, not deleted.
+And also shows the total number of current events and starred evebts 
+
+it shows:
+Joined Events
+Starred Events
+Joined Clubs
+
+Dashboard:
+Club User: 
+Contains Clubs that are created by and the total number of clubs count and same for events as well.
+The clubs that are there can be viewed edited and deleted.
+Total numbers of interested events are listed...and they can be removed marked uninterested (which is not done in backend yet)
+
+It shows:
+Created clubs:
+Created clubs:
+
+
+I think filtering can be done by frontend but searching needs backend I think.
+There is a search bar to search events and clubs. 
+
+And there is a filter system: 
+which can be filterd based on
+Types: Events Or Clubs
+Price: Free or Paid
+Date: From one date to another
+Categories: all types of events or clubs there are like academic, professional
+
+
+Regular User Profile/Dashboard:
+Shows regular user: 
+Fullname
+Email
+And they both can be edited.
+
+And it shows:
+Joined Events
+Starred Events
+Joined Clubs
+
+Event Details: 
+
+First Step:
+
+Event_Type:  ['Academic, Professional, Sports, Cultural, Technical, Social, and if selected Other then allow write whatever the user wants] 
+Affiliated_Club: Choices among different clubs[ ]
+Event_title : Char(max=200) 
+Short_description :  Max Char[200 characters]
+
+Second Step:
+Event Date: datetime
+Event time: Exact time
+Location: Location API
+Virtual : Real or Virtual Selection  
+Price: if 0 then free other wise dollar
+Max_attendees: any number
+Detailed Description: Char(max=infinite)
+
+Intersted =  Boolean ...Null or Interested ( users can mark events as intersted
+
+Club User can create multiple clubs and multiple events, but club user have to select affiliated club each time to point which club is event related to. 
+
+Club:
+
+First_Step:
+Club_Logo = Image(uploaded to=)
+Club_Name = Char(max=100)
+Description = [any amount of Char]
+Club_type = ['Academic, Professional, Sports, Cultural, Technical, Social, and if selected Other then allow write whatever the user wants]
+Contact_Phone = country code showing if possible
+Contact_Email = email_format
+Website_URL = URLField
+
+Second_Step:
+Members: IntegerField()
+Profile_Pic = ImageField(uploaded to = media)
+Member_Name = Char(max = 100)
+Position = Char(max = 100)
+Email = Email Field 
+Year In College = ["Freshmen","Sophomore",'Junor","Senior","Graduate","Alumni","Other"]
+Joined_Date = DateField
+
+Third_Step:
+Achievement:
+Title: Char(max = 200) (Optional)
+Description: Char      (Optional)
+Date_Achieved = DateField (Optional)
+
+
+And probably add JWT for better security and slugfield for readable url aswell
+# JWT settings
+SIMPLE_JWT = {
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'ROTATE_REFRESH_TOKENS': True, 
+}
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+Probably need to add 
+
+What is cleaned_data?
+
+When a Django form is submitted and validated, Django collects all the cleaned and validated values into a dictionary called cleaned_data.
+
+Example: If a form has fields username and email, after validation, you can access them like:
+
+username = self.cleaned_data['username']
+email = self.cleaned_data['email']
+
+
+Adding slugfield for URL if needed...
+Add real time notification and reminder system using like celery-redis or whatever other emailing system  or websockets if thats better
