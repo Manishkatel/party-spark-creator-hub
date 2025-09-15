@@ -1,5 +1,4 @@
-# Welcome to your Lovable project
-
+# Welcome to Party Spark Creator Hub
 ## Project info
 
 **URL**: https://lovable.dev/projects/b9e295e9-69a1-48c9-8971-1c6705a2933e
@@ -7,8 +6,6 @@
 ## How can I edit this code?
 
 There are several ways of editing your application.
-
-**Use Lovable**
 
 Simply visit the [Lovable Project](https://lovable.dev/projects/b9e295e9-69a1-48c9-8971-1c6705a2933e) and start prompting.
 
